@@ -183,22 +183,8 @@ Resources:
               - 'ec2:StartInstances'
               - 'ec2:StopInstances'
             Resource:
-              - !Join 
-                - ''
-                - - 'arn:aws:ec2:'
-                  - !Ref 'AWS::Region'
-                  - ':'
-                  - !Ref 'AWS::AccountId'
-                  - ':instance/'
-                  - !Ref HANAPrimaryInstanceId
-              - !Join 
-                - ''
-                - - 'arn:aws:ec2:'
-                  - !Ref 'AWS::Region'
-                  - ':'
-                  - !Ref 'AWS::AccountId'
-                  - ':instance/'
-                  - !Ref HANASecondaryInstanceId
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${HANAPrimaryInstanceId}"
+              - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${HANASecondaryInstanceId}"
       Roles:
         - !Ref HANAPrimaryInstanceRole
         - !Ref HANASecondaryInstanceRole
@@ -296,6 +282,14 @@ Resources:
             Version: 2012-10-17
             Statement:
                 - Action:
+                    - 'ssm:sendCommand'
+                    - 'ssm:GetDocument'
+                  Resource: 
+                    - !Sub "arn:aws:ssm:${AWS::Region}::document/AWS-RunShellScript"
+                    - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${HANAPrimaryInstanceId}"
+                    - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${HANASecondaryInstanceId}"
+                  Effect: Allow
+                - Action:
                     - 'ec2:CreateTags'
                     - 'ec2:DescribeTags'
                     - 'ec2:DescribeInstanceAttribute'
@@ -304,11 +298,15 @@ Resources:
                     - 'ec2:DeleteRoute'
                     - 'ec2:DescribeRouteTables'
                     - 'ec2:ReplaceRoute'
-                    - 'iam:PutRolePolicy'
-                    - 'ssm:sendCommand'
                     - 'ssm:ListCommands'
-                    - 'ssm:GetDocument'
                   Resource: "*"
+                  Effect: Allow
+                - Action:
+                    - 'iam:PutRolePolicy'
+                  Resource:
+                    - !Sub "arn:aws:iam::${AWS::AccountId}:role/${HANASecondaryInstanceRole}"
+                    - !Sub "arn:aws:iam::${AWS::AccountId}:role/${HANAPrimaryInstanceRole}"
+
                   Effect: Allow
 
   ConfigureHALambdaEnableHA:

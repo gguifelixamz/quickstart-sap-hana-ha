@@ -811,7 +811,7 @@
                 "SLES12SP2SAPHVM": "ami-d56faab7",
                 "SLES12SP3SAPBYOSHVM": "ami-41d22023",
                 "SLES12SP3SAPHVM": "ami-4d6eab2f",
-                "WS2012R2": "ami-30a55952"
+                "WS2012R2": "ami-926fa2f0"
             },
             "ca-central-1": {
                 "RHEL73SAPHVM": "ami-2a63e64e",

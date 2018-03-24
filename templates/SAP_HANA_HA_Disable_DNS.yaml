@@ -72,15 +72,21 @@ Resources:
       ManagedPolicyArns:
       - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Path: "/"
-       Policies:
+      Policies:
          - PolicyName: LambdaHAPolicy
            PolicyDocument:
              Version: 2012-10-17
              Statement:
                  - Action:
                      - 'ssm:sendCommand'
-                     - 'ssm:ListCommands'
                      - 'ssm:GetDocument'
+                   Resource: 
+                      - !Sub "arn:aws:ssm:${AWS::Region}::document/AWS-RunShellScript"
+                      - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${HANAPrimaryInstanceId}"
+                      - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${HANASecondaryInstanceId}"
+                   Effect: Allow
+                 - Action:
+                     - 'ssm:ListCommands'
                    Resource: "*"
                    Effect: Allow
 
