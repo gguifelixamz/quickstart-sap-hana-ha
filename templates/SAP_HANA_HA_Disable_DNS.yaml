@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  HANAPrimaryIPAddress:
+    Type: String
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})'
+    Description: IP address of HANA Primary Instance
+  HANASecondaryIPAddress:
+    Type: String
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})'
+    Description: IP address of HANA Secondary Instance
+  HANAPrimaryInstanceId:
+     Description : Instance ID of Primary Instance
+     Type: String
+  HANASecondaryInstanceId:
+     Description : Instance ID of Secondary Instance
+     Type: String
+  LambdaBucket:
+    Description: S3 Bucket to that stores Lambda Functions (s3://bucket/).
+    Type: String
+  LambdaBucketPreFix:
+    Description: S3 Prefix for lambda
+    Type: String
+
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: VPC infrastructure details
+        Description:
+          default: ''
+        Parameters:
+          - HANAPrimaryInstanceId
+          - HANASecondaryInstanceId
+          - HANAPrimaryIPAddress
+          - HANASecondaryIPAddress
+      - Label:
+          default: S3 Bucket
+        Description:
+          default: ''
+        Parameters:
+          - LambdaBucket
+          - LambdaBucketPreFix
+
+    ParameterLabels:
+      HANAPrimaryIPAddress:
+        default: Primary HANA IP Address
+      HANASecondaryIPAddress:
+        default: Secondary HANA IP Address
+      HANAPrimaryInstanceId:
+        default: Primary HANA Instance ID
+      HANASecondaryInstanceId:
+        default: Secondary HANA Instance ID
+      LambdaBucket:
+        default: S3 Bucket with Lambda Functions
+      LambdaBucketPreFix:
+        default: S3 Prefix
+
+Resources:
+
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: "/"
+       Policies:
+         - PolicyName: LambdaHAPolicy
+           PolicyDocument:
+             Version: 2012-10-17
+             Statement:
+                 - Action:
+                     - 'ssm:sendCommand'
+                     - 'ssm:ListCommands'
+                     - 'ssm:GetDocument'
+                   Resource: "*"
+                   Effect: Allow
+
+  ConfigureHALambdaDisableDNS:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: disable_DNS.lambda_handler
+      Runtime: python3.6
+      Timeout: '300'
+      Role: !GetAtt [ LambdaExecutionRole, Arn ]
+      Code:
+        S3Bucket: !Ref LambdaBucket
+        S3Key: !Join ['', [!Ref LambdaBucketPreFix, '/disable_DNS.zip']]
+
+  InvokeLambdaResourceDisableDNS:
+    Type: 'Custom::LambdaCallout'
+    DependsOn:
+      - ConfigureHALambdaDisableDNS
+    Properties:
+      ServiceToken: !GetAtt 
+        - ConfigureHALambdaDisableDNS
+        - Arn
+      PrimaryInstanceId: !Ref HANAPrimaryInstanceId
+      SecondaryInstanceId: !Ref HANASecondaryInstanceId
+      AWSRegion: !Ref 'AWS::Region'
+      HANAPrimaryIPAddress: !Ref HANAPrimaryIPAddress
+      HANASecondaryIPAddress: !Ref HANASecondaryIPAddress
+
+Outputs:
+  ResultsLambdaDNS:
+    Description: Disable DNS Results
+    Value: !GetAtt 
+      - InvokeLambdaResourceDisableDNS
+      - Status

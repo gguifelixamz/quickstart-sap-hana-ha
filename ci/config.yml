@@ -1,5 +1,5 @@
 global:
-  marketplace-ami: false
+  marketplace-ami: true
   owner: quickstart-eng@amazon.com
   qsname: quickstart-sap-hana-ha
   regions:
@@ -20,8 +20,7 @@ global:
  
 tests:
   quickstart-sap-hana-hat1:
-    parameter_input: quickstart-sap-hana-ha-example-params1.json
-    template_file: quickstart-sap-hana-ha-example1.template
-  quickstart-sap-hana-hat2:
-    parameter_input: quickstart-sap-hana-ha-example-params2.json
-    template_file: quickstart-sap-hana-ha-example2.template
+    regions:
+	- ap-southeast-2
+    parameter_input: SAP_HANA_HA_Master_With_VPC_Disable_DNS_Input.json
+    template_file: SAP_HANA_HA_Master_With_VPC_Disable_DNS.yaml
