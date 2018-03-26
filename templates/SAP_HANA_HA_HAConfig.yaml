@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
+Description: High Availability Configuration
 Parameters:
   PrimarySubnetId:
      Description : Private Subnet ID of Primary Instance
@@ -261,7 +262,7 @@ Resources:
         - - !Ref HANAPrimaryIPAddress
           - /32
 
-  LambdaExecutionRole:
+  HAConfigLambdaRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -309,24 +310,24 @@ Resources:
 
                   Effect: Allow
 
-  ConfigureHALambdaEnableHA:
+  HAConfigLambdaFunction:
     Type: "AWS::Lambda::Function"
     Properties:
-      Handler: configure_HA.lambda_handler
+      Handler: HAConfig.lambda_handler
       Runtime: python3.6
       Timeout: '300'
-      Role: !GetAtt [ LambdaExecutionRole, Arn ]
+      Role: !GetAtt [ HAConfigLambdaRole, Arn ]
       Code:
         S3Bucket: !Ref MyS3Bucket
-        S3Key: !Join ['', [!Ref MyS3BucketPreFix, '/configure_HA.zip']]
+        S3Key: !Join ['', [!Ref MyS3BucketPreFix, '/HAConfig.zip']]
 
-  InvokeLambdaResourceEnableHA:
+  InvokeHAConfigLambdaFunction:
     Type: 'Custom::LambdaCallout'
     DependsOn:
-      - ConfigureHALambdaEnableHA
+      - HAConfigLambdaFunction
     Properties:
       ServiceToken: !GetAtt 
-        - ConfigureHALambdaEnableHA
+        - HAConfigLambdaFunction
         - Arn
       PrimaryInstanceId: !Ref HANAPrimaryInstanceId
       SecondaryInstanceId: !Ref HANASecondaryInstanceId
@@ -348,8 +349,8 @@ Resources:
       TempS3Bucket: !Join [ '',[ 's3://',!Ref MyS3Bucket,'/',!Ref MyS3BucketPreFix,'/']]
 
 Outputs:
-  ResultsLambdaHA:
+  ResultsHAConfig:
     Description: HA Config. Results
     Value: !GetAtt 
-      - InvokeLambdaResourceEnableHA
+      - InvokeHAConfigLambdaFunction
       - Status

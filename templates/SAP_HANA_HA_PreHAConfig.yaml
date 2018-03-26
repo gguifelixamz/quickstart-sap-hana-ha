@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
+Description: Pre HA Configuration Steps
 Parameters:
   HANAPrimaryIPAddress:
     Type: String
@@ -20,6 +21,23 @@ Parameters:
   LambdaBucketPreFix:
     Description: S3 Prefix for lambda
     Type: String
+  SID:
+    Type: String
+    Description: SAP HANA system ID for installation and setup.
+    AllowedPattern: '([A-Z]{1}[0-9A-Z]{2})'
+    ConstraintDescription: This value must consist of 3 characters.
+  SAPInstanceNum:
+    Type: String
+    Description: SAP HANA instance number.
+    AllowedPattern: '([0-8]{1}[0-9]{1}|[9]{1}[0-7]{1})'
+    ConstraintDescription: Instance number must be between 00 and 97.
+  HANAMasterPass:
+    Type: String
+    Description: SAP HANA password to use during installation.
+    NoEcho: 'true'
+    MinLength: '8'
+    AllowedPattern: '^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*'
+    ConstraintDescription: This must be at least 8 characters, including uppercase, lowercase, and numeric values.
 
 Metadata:
   'AWS::CloudFormation::Interface':
@@ -33,6 +51,9 @@ Metadata:
           - HANASecondaryInstanceId
           - HANAPrimaryIPAddress
           - HANASecondaryIPAddress
+          - SAPInstanceNum
+          - HANAMasterPass
+          - SID
       - Label:
           default: S3 Bucket
         Description:
@@ -54,10 +75,16 @@ Metadata:
         default: S3 Bucket with Lambda Functions
       LambdaBucketPreFix:
         default: S3 Prefix
+      SAPInstanceNum:
+        default: HANA Instance number
+      SID:
+        default: HANA SID
+      HANAMasterPass:
+        default: HANA Master password
 
 Resources:
 
-  LambdaExecutionRole:
+  PreHAConfigLambdaRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -90,34 +117,37 @@ Resources:
                    Resource: "*"
                    Effect: Allow
 
-  ConfigureHALambdaDisableDNS:
+  PreHAConfigLambdaFunction:
     Type: "AWS::Lambda::Function"
     Properties:
-      Handler: disable_DNS.lambda_handler
+      Handler: PreHAConfig.lambda_handler
       Runtime: python3.6
       Timeout: '300'
-      Role: !GetAtt [ LambdaExecutionRole, Arn ]
+      Role: !GetAtt [ PreHAConfigLambdaRole, Arn ]
       Code:
         S3Bucket: !Ref LambdaBucket
-        S3Key: !Join ['', [!Ref LambdaBucketPreFix, '/disable_DNS.zip']]
+        S3Key: !Join ['', [!Ref LambdaBucketPreFix, '/PreHAConfig.zip']]
 
-  InvokeLambdaResourceDisableDNS:
+  InvokePreHAConfigLambdaFunction:
     Type: 'Custom::LambdaCallout'
     DependsOn:
-      - ConfigureHALambdaDisableDNS
+      - PreHAConfigLambdaFunction
     Properties:
       ServiceToken: !GetAtt 
-        - ConfigureHALambdaDisableDNS
+        - PreHAConfigLambdaFunction
         - Arn
       PrimaryInstanceId: !Ref HANAPrimaryInstanceId
       SecondaryInstanceId: !Ref HANASecondaryInstanceId
       AWSRegion: !Ref 'AWS::Region'
       HANAPrimaryIPAddress: !Ref HANAPrimaryIPAddress
       HANASecondaryIPAddress: !Ref HANASecondaryIPAddress
+      SID: !Ref SID
+      InstanceNo: !Ref SAPInstanceNum
+      HANAMasterPass : !Ref HANAMasterPass
 
 Outputs:
-  ResultsLambdaDNS:
-    Description: Disable DNS Results
+  ResultsPreHAConfig:
+    Description: Pre HANA HA Config Results
     Value: !GetAtt 
-      - InvokeLambdaResourceDisableDNS
+      - InvokePreHAConfigLambdaFunction
       - Status

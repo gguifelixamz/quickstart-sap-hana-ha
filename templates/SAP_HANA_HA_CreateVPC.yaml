@@ -57,15 +57,13 @@ Parameters:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
     Default: 10.0.3.0/24
-    Description: CIDR block for the public DMZ subnet 1 located in Availability Zone
-      1
+    Description: CIDR block for the public DMZ subnet 1 located in Availability Zone 1
     Type: String
   PublicSubnet2CIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
     Default: 10.0.4.0/24
-    Description: CIDR block for the public DMZ subnet 2 located in Availability Zone
-      2
+    Description: CIDR block for the public DMZ subnet 2 located in Availability Zone 2
     Type: String
   VPCCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
@@ -137,10 +135,7 @@ Resources:
         Ref: VPC
       CidrBlock:
         Ref: PrivateSubnet1CIDR
-      AvailabilityZone:
-        Fn::Select:
-        - '0'
-        - Ref: AvailabilityZones
+      AvailabilityZone: !Select [ 0, Ref: AvailabilityZones ]
       Tags:
       - Key: Name
         Value: Private subnet 1
@@ -153,10 +148,7 @@ Resources:
         Ref: VPC
       CidrBlock:
         Ref: PrivateSubnet2CIDR
-      AvailabilityZone:
-        Fn::Select:
-        - '1'
-        - Ref: AvailabilityZones
+      AvailabilityZone: !Select [ 1, Ref: AvailabilityZones ]
       Tags:
       - Key: Name
         Value: Private subnet 2
@@ -169,10 +161,7 @@ Resources:
         Ref: VPC
       CidrBlock:
         Ref: PublicSubnet1CIDR
-      AvailabilityZone:
-        Fn::Select:
-        - '0'
-        - Ref: AvailabilityZones
+      AvailabilityZone: !Select [ 0, Ref: AvailabilityZones ]
       Tags:
       - Key: Name
         Value: Public subnet 1
