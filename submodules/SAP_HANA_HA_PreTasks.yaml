@@ -84,7 +84,7 @@ Resources:
         Ref: CreateNewMyS3Bucket
       SourceBucket:
         Ref: QSS3BucketName
-      Prefix:
+      Prefix: 
         Ref: QSS3KeyPrefix
       PrivSubnet1:
         Ref: PrivSubnet1

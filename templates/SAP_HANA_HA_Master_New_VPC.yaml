@@ -397,7 +397,7 @@ Resources:
       Parameters:
         MyS3Bucket: !Ref MyS3Bucket
         QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}/scripts
         PrivSubnet1: !GetAtt 
                         - CreateVPC
                         - Outputs.PrivateSubnet1ID
@@ -431,6 +431,7 @@ Resources:
         HANAWorkerHostname: dummy
         PlacementGroupName: !Ref 'AWS::NoValue'
         PrivateBucket: !Ref QSS3BucketNameHANA
+        CustomStorageConfig: !Ref QSS3KeyPrefixHANA
         Proxy: !Ref Proxy
         KeyName: !Ref KeyName
         MyOS: !Ref MyOS
@@ -448,7 +449,6 @@ Resources:
         CloudTrailS3Bucket: !Ref CloudTrailS3Bucket
         EnableLogging: !Ref EnableLogging
         SAPTZ: !Ref SAPTZ
-        CustomStorageConfig: !Ref QSS3KeyPrefixHANA
         SLESBYOSRegCode: !Ref SLESBYOSRegCode
       TimeoutInMinutes: '7200'
 
@@ -477,6 +477,7 @@ Resources:
         HANAWorkerHostname: dummy
         PlacementGroupName: !Ref 'AWS::NoValue'
         PrivateBucket: !Ref QSS3BucketNameHANA
+        CustomStorageConfig: !Ref QSS3KeyPrefixHANA
         Proxy: !Ref Proxy
         KeyName: !Ref KeyName
         MyOS: !Ref MyOS
@@ -494,7 +495,6 @@ Resources:
         CloudTrailS3Bucket: !Ref CloudTrailS3Bucket
         EnableLogging: !Ref EnableLogging
         SAPTZ: !Ref SAPTZ
-        CustomStorageConfig: !Ref QSS3KeyPrefixHANA
         SLESBYOSRegCode: !Ref SLESBYOSRegCode
       TimeoutInMinutes: '7200'
 
@@ -523,7 +523,7 @@ Resources:
           LambdaBucket: !GetAtt 
                             - PreTasks
                             - Outputs.MyS3Bucket
-          LambdaBucketPreFix: !Ref QSS3KeyPrefix
+          LambdaBucketPreFix: !Sub ${QSS3KeyPrefix}/scripts
           SID: !Ref SID
           HANAMasterPass: !Ref HANAMasterPass
           SAPInstanceNum: !Ref SAPInstanceNum
@@ -571,7 +571,7 @@ Resources:
           MyS3Bucket: !GetAtt 
                             - PreTasks
                             - Outputs.MyS3Bucket
-          MyS3BucketPreFix: !Ref QSS3KeyPrefix
+          MyS3BucketPreFix: !Sub ${QSS3KeyPrefix}/scripts
           HANAPrimaryInstanceRole: !GetAtt 
                             - PrimaryInstance
                             - Outputs.HANAMasterInstanceRole
