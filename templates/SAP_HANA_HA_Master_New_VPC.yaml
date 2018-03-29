@@ -396,7 +396,7 @@ Resources:
       TemplateURL: !Sub https://${QSS3BucketName}-develop.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreTasks.yaml
       Parameters:
         MyS3Bucket: !Ref MyS3Bucket
-        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketName: !Sub ${QSS3BucketName}-develop 
         QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}/scripts
         PrivSubnet1: !GetAtt 
                         - CreateVPC
