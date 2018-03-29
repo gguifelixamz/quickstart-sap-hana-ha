@@ -1,0 +1,154 @@
+[
+    {
+        "ParameterKey": "AvailabilityZones",
+        "ParameterValue": "$[taskcat_getaz_2]"
+    },
+    {
+        "ParameterKey": "VPCCIDR",
+        "ParameterValue": "10.0.0.0/16"
+    },
+    {
+        "ParameterKey": "PublicSubnet1CIDR",
+        "ParameterValue": "10.0.3.0/24"
+    },
+    {
+        "ParameterKey": "PublicSubnet2CIDR",
+        "ParameterValue": "10.0.4.0/24"
+    },
+    {
+        "ParameterKey": "PrivateSubnet1CIDR",
+        "ParameterValue": "10.0.1.0/24"
+    },
+    {
+        "ParameterKey": "PrivateSubnet2CIDR",
+        "ParameterValue": "10.0.2.0/24"
+    },
+    {
+        "ParameterKey": "VPCTenancy",
+        "ParameterValue": ""
+    },
+    {
+        "ParameterKey": "RemoteAccessCIDR",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey": "DomainName",
+        "ParameterValue": "testdomain.net"
+    },
+    {
+        "ParameterKey": "HANAHostnamePrimary",
+        "ParameterValue": "prihana"
+    },
+    {
+        "ParameterKey": "HANAHostnameSecondary",
+        "ParameterValue": "sechana"
+    },
+    {
+        "ParameterKey": "QSS3BucketNameHANA",
+        "ParameterValue": "quickstart-reference/sap/hana/latest"
+    },
+    {
+        "ParameterKey": "QSS3KeyPrefixHANA",
+        "ParameterValue": "quickstart-reference/sap/hana/latest/scripts"
+    },
+    {
+        "ParameterKey": "Proxy",
+        "ParameterValue": ""
+    },
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "$[taskcat_getkeypair]"
+    },
+    {
+        "ParameterKey": "HANAInstallMedia",
+        "ParameterValue": "s3://$[taskcat_getmediabucket]/sap/hana/sps12/"
+    },
+    {
+        "ParameterKey": "MyS3Bucket",
+        "ParameterValue": ""
+    },
+    {
+        "ParameterKey": "QSS3BucketName",
+        "ParameterValue": "aws-quickstart"
+    },
+    {
+        "ParameterKey": "QSS3KeyPrefix",
+        "ParameterValue": "quickstart-sap-hana-ha"
+    },
+    {
+        "ParameterKey": "EnableLogging",
+        "ParameterValue": "No"
+    },
+    {
+        "ParameterKey": "CloudTrailS3Bucket",
+        "ParameterValue": ""
+    },
+    {
+        "ParameterKey": "AutoRecovery",
+        "ParameterValue": "Yes"
+    },
+    {
+        "ParameterKey": "Encryption",
+        "ParameterValue": "No"
+    },
+    {
+        "ParameterKey": "VolumeType",
+        "ParameterValue": "gp2"
+    },
+    {
+        "ParameterKey": "MyOS",
+        "ParameterValue": "SuSELinux12SP2ForSAP"
+    },
+    {
+        "ParameterKey": "SLESBYOSRegCode",
+        "ParameterValue": ""
+    },
+    {
+        "ParameterKey": "InstallRDPInstance",
+        "ParameterValue": "No"
+    },
+    {
+        "ParameterKey": "InstallHANA",
+        "ParameterValue": "Yes"
+    },
+    {
+        "ParameterKey": "RDPInstanceType",
+        "ParameterValue": "c4.large"
+    },
+    {
+        "ParameterKey": "MyInstanceType",
+        "ParameterValue": "r4.2xlarge"
+    },
+    {
+        "ParameterKey": "SID",
+        "ParameterValue": "HDB"
+    },
+    {
+        "ParameterKey": "SAPInstanceNum",
+        "ParameterValue": "00"
+    },
+    {
+        "ParameterKey": "HANAMasterPass",
+        "ParameterValue": "$[taskcat_genpass_8A]"
+    },
+    {
+        "ParameterKey": "SAPTZ",
+        "ParameterValue": "UC"
+    },
+    {
+        "ParameterKey": "PrimaryHANASite",
+        "ParameterValue": "HAP"
+    },
+    {
+        "ParameterKey": "SecondaryHANASite",
+        "ParameterValue": "HAS"
+    },
+    {
+        "ParameterKey": "VirtualIPAddress",
+        "ParameterValue": "192.168.1.99"
+    },
+    {
+        "ParameterKey": "PaceMakerTag",
+        "ParameterValue": "PaceTag"
+    }
+]
