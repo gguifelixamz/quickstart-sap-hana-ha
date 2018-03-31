@@ -1,6 +1,6 @@
 global:
   marketplace-ami: true
-  owner: batrahs@amazon.com
+  owner: quickstart-eng@amazon.com
   qsname: quickstart-sap-hana-ha
   regions:
     - ap-northeast-1
