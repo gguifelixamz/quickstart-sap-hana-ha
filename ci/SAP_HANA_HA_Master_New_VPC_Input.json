@@ -68,14 +68,6 @@
         "ParameterValue": ""
     },
     {
-        "ParameterKey": "QSS3BucketName",
-        "ParameterValue": "aws-quickstart"
-    },
-    {
-        "ParameterKey": "QSS3KeyPrefix",
-        "ParameterValue": "quickstart-sap-hana-ha"
-    },
-    {
         "ParameterKey": "EnableLogging",
         "ParameterValue": "No"
     },

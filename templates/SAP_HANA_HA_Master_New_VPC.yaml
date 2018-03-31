@@ -375,7 +375,7 @@ Resources:
   CreateVPC:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}-develop.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_CreateVPC.yaml
+      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_CreateVPC.yaml
       Parameters:
         AvailabilityZones: 
           Fn::Join:
@@ -393,10 +393,10 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     DependsOn: CreateVPC
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}-develop.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreTasks.yaml
+      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreTasks.yaml
       Parameters:
         MyS3Bucket: !Ref MyS3Bucket
-        QSS3BucketName: !Sub ${QSS3BucketName}-develop 
+        QSS3BucketName: !Sub ${QSS3BucketName} 
         QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}/scripts
         PrivSubnet1: !GetAtt 
                         - CreateVPC
@@ -412,7 +412,7 @@ Resources:
       - PreTasks
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}-develop.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_BaseNodes.template
+      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_BaseNodes.template
       Parameters:
         PrivSubCIDR: !Ref PrivateSubnet1CIDR
         DMZCIDR: !Ref PublicSubnet1CIDR
@@ -458,7 +458,7 @@ Resources:
       - PreTasks
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}-develop.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_BaseNodes.template
+      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_BaseNodes.template
       Parameters:
         PrivSubCIDR: !Ref PrivateSubnet2CIDR
         DMZCIDR: !Ref PublicSubnet1CIDR
@@ -506,7 +506,7 @@ Resources:
     Condition: InstallHANAorNot
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}-develop.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreHAConfig.yaml
+      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreHAConfig.yaml
       Parameters:
           HANAPrimaryInstanceId: !GetAtt 
                         - PrimaryInstance
@@ -538,7 +538,7 @@ Resources:
     Condition: InstallHANAorNot
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-        TemplateURL: !Sub https://${QSS3BucketName}-develop.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_HAConfig.yaml
+        TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_HAConfig.yaml
         Parameters:
           HANAPrimaryInstanceId: !GetAtt 
                         - PrimaryInstance
