@@ -61,7 +61,7 @@
     },
     {
         "ParameterKey": "HANAInstallMedia",
-        "ParameterValue": "s3://$[taskcat_getmediabucket]/sap/hana/sps12/"
+        "ParameterValue": "s3://quickstart-ci-media/sap/hana/sps12/"
     },
     {
         "ParameterKey": "MyS3Bucket",
@@ -121,7 +121,7 @@
     },
     {
         "ParameterKey": "HANAMasterPass",
-        "ParameterValue": "$[taskcat_genpass_8A]"
+        "ParameterValue": "$[taskcat_genpass_16]"
     },
     {
         "ParameterKey": "SAPTZ",
