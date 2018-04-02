@@ -106,7 +106,7 @@ Resources:
             Service: lambda.amazonaws.com
           Action: sts:AssumeRole
       ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
       Path: "/"
       Policies:
       - PolicyName: preTasksLambdaPolicy
@@ -148,6 +148,8 @@ Resources:
            import boto3
            import cfnresponse
            
+           responseStr = {'Status' : {}}
+
            def copy_objects(source_bucket, dest_bucket, prefix, objects):
                s3 = boto3.client('s3')
                for o in objects:
@@ -198,22 +200,26 @@ Resources:
                    if event['RequestType'] == 'Delete':
                        delete_objects(dest_bucket, prefix, objects)
                    else:
-                       if (subnet1 != "" and subnet2 != "" ):
-                          if (validate_common_route_table(subnet1, subnet2)):
+                       if (validate_common_route_table(subnet1, subnet2)):
                               copy_objects(source_bucket, dest_bucket, prefix, objects)
-                          else:
-                              logging.error('Route Table Not Same for Private Subnets', exc_info=True)
-                              status = cfnresponse.FAILED
+                              responseStr['Status']['PreTasksLambdaFunction'] = "All Good"
                        else:
-                          copy_objects(source_bucket, dest_bucket, prefix, objects)
+                              logging.error('Route Table Not Same for Private Subnets', exc_info=True)
+                              responseStr['Status']['PreTasksLambdaFunction'] = "Route Table Needs to be Same for Private Subnets"
+                              status = cfnresponse.FAILED
                except Exception as e:
                    logging.error('Exception: %s' % e, exc_info=True)
+                   responseStr['Status']['PreTasksLambdaFunction'] = str(e)
                    status = cfnresponse.FAILED
                finally:
                    timer.cancel()
-                   cfnresponse.send(event, context, status, {}, None)
+                   cfnresponse.send(event, context, status, {'Status':json.dumps(responseStr)}, None)
            
 Outputs:
   MyS3Bucket:
     Value:
       Ref: CreateNewMyS3Bucket
+  ResultInvokePreTasksLambda:
+    Value: !GetAtt 
+        - InvokePreTasksLambda
+        - Status

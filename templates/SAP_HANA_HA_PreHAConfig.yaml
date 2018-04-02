@@ -38,6 +38,20 @@ Parameters:
     MinLength: '8'
     AllowedPattern: '^(?=.*?[a-z])(?=.*?[A-Z])(?=.*[0-9]).*'
     ConstraintDescription: This must be at least 8 characters, including uppercase, lowercase, and numeric values.
+  PrivSubnet1:
+    Description: 'Private Subnet for HANA Primary Instance'
+    Type: String
+    Default: ''
+  PrivSubnet2:
+    Description: 'Private Subnet for HANA Secondary Instance'
+    Type: String
+    Default: ''
+  HANAPrimarySecurityGroup:
+     Description : Security Group ID for HANA Primary Instance
+     Type: String
+  HANASecondarySecurityGroup:
+     Description : Security Group ID for HANA Secondary Instance
+     Type: String
 
 Metadata:
   'AWS::CloudFormation::Interface':
@@ -53,6 +67,10 @@ Metadata:
           - HANASecondaryIPAddress
           - SAPInstanceNum
           - HANAMasterPass
+          - PrivSubnet1
+          - PrivSubnet2
+          - HANAPrimarySecurityGroup
+          - HANASecondarySecurityGroup
           - SID
       - Label:
           default: S3 Bucket
@@ -81,6 +99,14 @@ Metadata:
         default: HANA SID
       HANAMasterPass:
         default: HANA Master password
+      PrivSubnet1:
+        default: Private Subnet for HANA Primary
+      PrivSubnet2:
+        default: Private Subnet for HANA Secondary
+      HANAPrimarySecurityGroup:
+        default: Primary HANA Security GroupId
+      HANASecondarySecurityGroup:
+        default: Secondary HANA Security GroupId
 
 Resources:
 
@@ -97,7 +123,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
       Path: "/"
       Policies:
          - PolicyName: LambdaHAPolicy
@@ -122,6 +148,13 @@ Resources:
     Properties:
       Handler: PreHAConfig.lambda_handler
       Runtime: python3.6
+      VpcConfig:
+        SecurityGroupIds:
+           - Ref: HANAPrimarySecurityGroup
+           - Ref: HANASecondarySecurityGroup
+        SubnetIds:
+           - Ref: PrivSubnet1
+           - Ref: PrivSubnet2
       Timeout: '300'
       Role: !GetAtt [ PreHAConfigLambdaRole, Arn ]
       Code:

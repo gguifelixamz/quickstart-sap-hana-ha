@@ -275,7 +275,7 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
       Path: "/"
       Policies:
         - PolicyName: LambdaHAPolicy
@@ -316,6 +316,13 @@ Resources:
       Handler: HAConfig.lambda_handler
       Runtime: python3.6
       Timeout: '300'
+      VpcConfig:
+        SecurityGroupIds:
+           - Ref: HANAPrimarySecurityGroup
+           - Ref: HANASecondarySecurityGroup
+        SubnetIds:
+           - Ref: PrimarySubnetId
+           - Ref: SecondarySubnetId
       Role: !GetAtt [ HAConfigLambdaRole, Arn ]
       Code:
         S3Bucket: !Ref MyS3Bucket

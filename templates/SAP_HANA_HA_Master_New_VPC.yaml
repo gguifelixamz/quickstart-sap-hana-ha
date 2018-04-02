@@ -527,6 +527,18 @@ Resources:
           SID: !Ref SID
           HANAMasterPass: !Ref HANAMasterPass
           SAPInstanceNum: !Ref SAPInstanceNum
+          PrivSubnet1: !GetAtt 
+                        - CreateVPC
+                        - Outputs.PrivateSubnet1ID
+          PrivSubnet2: !GetAtt 
+                        - CreateVPC
+                        - Outputs.PrivateSubnet2ID
+          HANAPrimarySecurityGroup: !GetAtt 
+                            - PrimaryInstance
+                            - Outputs.HANAMasterSecurityGroup
+          HANASecondarySecurityGroup: !GetAtt 
+                            - SecondaryInstance
+                            - Outputs.HANAMasterSecurityGroup
       TimeoutInMinutes: '7200'
 
   HAConfig:
