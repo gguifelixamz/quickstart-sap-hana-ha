@@ -21,8 +21,16 @@ def updateNetworkConfig(HANAInstanceID,HANAIPAddress,AWSRegion):
 
 def backupHANAonPrimary(HANAPrimaryInstanceID,hanaSID,hanaInstanceNo,HANAMasterPass,AWSRegion):
     CommandArray = []
+    CommandArray.append('HANAVersion='+'`su - '+hanaSID.lower()+'adm -c "HDB version | grep version:"`')
+    CommandArray.append('HANAVersion=`echo $HANAVersion | awk \'{print $2}\' |  awk -F\'.\' \'{print $1}\'`')
+    CommandArray.append('if [[ $HANAVersion -ne 1 ]]')
+    CommandArray.append('then')
+    CommandArray.append('echo $HANAVersion')
     CommandArray.append('su - '+hanaSID.lower()+'adm -c "hdbsql -u system -i '+hanaInstanceNo+' -d SystemDB -p '+HANAMasterPass+' \\"BACKUP DATA FOR SystemDB  USING FILE (\'backupSystem\')\\""')    
     CommandArray.append('su - '+hanaSID.lower()+'adm -c "hdbsql -u system -i '+hanaInstanceNo+' -d SystemDB -p '+HANAMasterPass+' \\"BACKUP DATA FOR '+hanaSID+' USING FILE (\'backup'+hanaSID+'\')\\""')
+    CommandArray.append('else')
+    CommandArray.append('su - '+hanaSID.lower()+'adm -c "hdbsql -u system -i '+hanaInstanceNo+' -p '+HANAMasterPass+' \\"BACKUP DATA USING FILE (\'backupDatabase\')\\""')    
+    CommandArray.append('fi')
     CommentStr = 'Backup Database on Primary'
     InstanceIDArray =[HANAPrimaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
