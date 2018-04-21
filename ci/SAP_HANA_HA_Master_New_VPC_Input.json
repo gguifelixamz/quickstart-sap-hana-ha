@@ -32,6 +32,10 @@
         "ParameterValue": "0.0.0.0/0"
     },
     {
+        "ParameterKey": "ApplicationCIDR",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
         "ParameterKey": "DomainName",
         "ParameterValue": "testdomain.net"
     },
@@ -84,7 +88,11 @@
         "ParameterValue": "No"
     },
     {
-        "ParameterKey": "VolumeType",
+        "ParameterKey": "VolumeTypeHanaData",
+        "ParameterValue": "gp2"
+    },
+    {
+        "ParameterKey": "VolumeTypeHanaLog",
         "ParameterValue": "gp2"
     },
     {

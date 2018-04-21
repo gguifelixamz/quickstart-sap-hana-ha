@@ -28,7 +28,12 @@ Parameters:
      ConstraintDescription : CIDR block parameter must be in the form x.x.x.x/16-28
      Default : 10.0.2.0/24
      Description : CIDR block for the private subnet 2 located in Availability Zone 2
-     Type : String 
+     Type : String
+  ApplicationCIDR:
+     ConstraintDescription : CIDR block parameter must be in the form x.x.x.x/16-28
+     Default : 0.0.0.0/0
+     Description : CIDR block where application will be deployed
+     Type : String
   VPCTenancy:
       AllowedValues:
         - "default"
@@ -245,6 +250,7 @@ Metadata:
           - PrivateSubnet2CIDR
           - PublicSubnet1CIDR
           - PublicSubnet2CIDR
+          - ApplicationCIDR
           - VPCTenancy
       - Label:
           default: Server and storage configuration
@@ -312,6 +318,8 @@ Metadata:
         default: CIDR block for Private subnet 2
       RemoteAccessCIDR:
         default: Enter CIDR block for RDP access
+      ApplicationCIDR:
+        default: Enter CIDR for Application instances
       SnapShotID:
         default: Enter snapshot ID
       DomainName:
@@ -427,6 +435,7 @@ Resources:
       Parameters:
         PrivSubCIDR: !Ref PrivateSubnet1CIDR
         DMZCIDR: !Ref PublicSubnet1CIDR
+        ApplicationCIDR: !Ref ApplicationCIDR
         VPCID: !GetAtt 
             - CreateVPC
             - Outputs.VPCID
@@ -475,6 +484,7 @@ Resources:
       Parameters:
         PrivSubCIDR: !Ref PrivateSubnet2CIDR
         DMZCIDR: !Ref PublicSubnet1CIDR
+        ApplicationCIDR: !Ref ApplicationCIDR
         VPCID: !GetAtt 
             - CreateVPC
             - Outputs.VPCID

@@ -39,6 +39,11 @@ Parameters:
      AllowedPattern: 'subnet-[0-9a-z]{8}'
      Description : CIDR block for the private subnet 2 located in Availability Zone 2
      Type : 'AWS::EC2::Subnet::Id'
+  ApplicationCIDR:
+     ConstraintDescription : CIDR block parameter must be in the form x.x.x.x/16-28
+     Default : subnet-xxxxxxxx
+     Description : CIDR block where application will be deployed
+     Type : 'AWS::EC2::Subnet::Id'
   RemoteAccessCIDR:
     Description: CIDR block from where you want to access your RDP instance.
     Type: String
@@ -250,6 +255,7 @@ Metadata:
           - PrivateSubnet1ID
           - PrivateSubnet2ID
           - PublicSubnet1ID
+          - ApplicationCIDR
           - VPCID
           - VPCTenancy
       - Label:
@@ -322,6 +328,8 @@ Metadata:
         default: Public Subnet ID for RDP Instance
       RemoteAccessCIDR:
         default: Enter CIDR block for RDP access
+      ApplicationCIDR:
+        default: Enter CIDR for Application instances
       DomainName:
         default: Enter domain name
       HANAHostnamePrimary:
@@ -413,6 +421,7 @@ Resources:
       Parameters:
         PrivSubCIDR: !Ref PrivateSubnet1CIDR
         DMZCIDR: !Ref PublicSubnet1CIDR
+        ApplicationCIDR: !Ref ApplicationCIDR
         VPCID: !Ref VPCID
         HANASubnet: !Ref PrivateSubnet1ID
         DMZSubnet: !Ref PublicSubnet1ID
@@ -453,6 +462,7 @@ Resources:
       Parameters:
         PrivSubCIDR: !Ref PrivateSubnet2CIDR
         DMZCIDR: !Ref PublicSubnet1CIDR
+        ApplicationCIDR: !Ref ApplicationCIDR
         VPCID: !Ref VPCID
         HANASubnet: !Ref PrivateSubnet2ID
         DMZSubnet: !Ref PublicSubnet1ID
