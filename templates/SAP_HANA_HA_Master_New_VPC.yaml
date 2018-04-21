@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
+Description: SAP HANA High Availability - New VPC Setup
 Parameters:
   AvailabilityZones:
      Description : List of Availability Zones to use for the subnets in the VPC. The logical order is preserved.
@@ -58,11 +59,11 @@ Parameters:
   QSS3BucketNameHANA:
     Description: Main build bucket where templates and scripts are located.
     Type: String
-    Default: quickstart-reference/sap/hana/latest
+    Default: aws-quickstart/quickstart-sap-hana
   QSS3KeyPrefixHANA:
     Description: S3 location where custom storage configuration file is localted.
     Type: String
-    Default: quickstart-reference/sap/hana/latest/scripts
+    Default: aws-quickstart/quickstart-sap-hana/scripts
   Proxy:
     Description: Proxy address for http access (e.g., http://xyz.abc.com:8080 or http://10.x.x.x:8080).
     Type: String
@@ -73,7 +74,7 @@ Parameters:
     Description: Name of an existing Amazon EC2 key pair. All instances will launch with this key pair.
   HANAInstallMedia:
     Description: Full path to Amazon S3 location of SAP HANA software files (e.g. s3://myhanabucket/sap-hana-sps11/).
-    Default: 's3://hanasoftsyd/HANA2.0SP2/'
+    Default: ''
     Type: String
   MyS3Bucket:
     Description: S3 Bucket to store temp config objects, if empty will be created.
@@ -116,9 +117,16 @@ Parameters:
     AllowedValues:
       - 'Yes'
       - 'No'
-  VolumeType:
+  VolumeTypeHanaData:
     Type: String
-    Description: 'EBS volume type: General Purpose SSD (gp2) or Provisioned IOPS SSD (io1).'
+    Description: 'EBS volume type for SAP HANA Data: General Purpose SSD (gp2) or Provisioned IOPS SSD (io1).'
+    Default: gp2
+    AllowedValues:
+      - gp2
+      - io1
+  VolumeTypeHanaLog:
+    Type: String
+    Description: 'EBS volume type for SAP HANA Log: General Purpose SSD (gp2) or Provisioned IOPS SSD (io1).'
     Default: gp2
     AllowedValues:
       - gp2
@@ -214,12 +222,12 @@ Parameters:
     Type: String
     Default: HAS
   VirtualIPAddress:
-    Description: Virtual/Overlay IP Address
+    Description: Virtual/Overlay IP Address (Should not be already assigned to any instance)
     Type: String
     Default: 192.168.1.99
     AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})'
   PaceMakerTag:
-    Description: Pacemaker Tag name
+    Description: Pacemaker Tag name (Should not be already assigned to any instance)
     Type: String
     Default: PaceTag
 Metadata:
@@ -249,7 +257,8 @@ Metadata:
           - HostCount
           - AutoRecovery
           - KeyName
-          - VolumeType
+          - VolumeTypeHanaLog
+          - VolumeTypeHanaData
           - Encryption
       - Label:
           default: SAP HANA database configuration
@@ -337,8 +346,10 @@ Metadata:
         default: Install SAP HANA software?
       Encryption:
         default: Would you like to turn on encryption?
-      VolumeType:
-        default: Choose storage volume type
+      VolumeTypeHanaData:
+        default: Choose storage volume type for SAP HANA Data
+      VolumeTypeHanaLog:
+        default: Choose storage volume type for SAP HANA Log
       MyOS:
         default: Choose operating system for SAP HANA
       SLESBYOSRegCode:
@@ -412,7 +423,7 @@ Resources:
       - PreTasks
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_BaseNodes.template
+      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/submodules/quickstart-sap-hana/templates/SAP-HANA-BaseNodes.template
       Parameters:
         PrivSubCIDR: !Ref PrivateSubnet1CIDR
         DMZCIDR: !Ref PublicSubnet1CIDR
@@ -450,6 +461,8 @@ Resources:
         EnableLogging: !Ref EnableLogging
         SAPTZ: !Ref SAPTZ
         SLESBYOSRegCode: !Ref SLESBYOSRegCode
+        VolumeTypeHanaData: !Ref VolumeTypeHanaData
+        VolumeTypeHanaLog: !Ref VolumeTypeHanaLog
       TimeoutInMinutes: '7200'
 
   SecondaryInstance:
@@ -458,7 +471,7 @@ Resources:
       - PreTasks
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_BaseNodes.template
+      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/submodules/quickstart-sap-hana/templates/SAP-HANA-BaseNodes.template
       Parameters:
         PrivSubCIDR: !Ref PrivateSubnet2CIDR
         DMZCIDR: !Ref PublicSubnet1CIDR
@@ -496,6 +509,8 @@ Resources:
         EnableLogging: !Ref EnableLogging
         SAPTZ: !Ref SAPTZ
         SLESBYOSRegCode: !Ref SLESBYOSRegCode
+        VolumeTypeHanaData: !Ref VolumeTypeHanaData
+        VolumeTypeHanaLog: !Ref VolumeTypeHanaLog
       TimeoutInMinutes: '7200'
 
   PreHAConfig:
