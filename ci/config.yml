@@ -22,5 +22,6 @@ tests:
   quickstart-sap-hana-ha-newVPC:
     regions:
       - us-west-2
+      - us-east-2
     parameter_input: SAP_HANA_HA_Master_New_VPC_Input.json
     template_file: SAP_HANA_HA_Master_New_VPC.yaml

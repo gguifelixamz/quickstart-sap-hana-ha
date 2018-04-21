@@ -49,11 +49,11 @@
     },
     {
         "ParameterKey": "QSS3BucketNameHANA",
-        "ParameterValue": "quickstart-reference/sap/hana/latest"
+        "ParameterValue": "aws-quickstart/quickstart-sap-hana"
     },
     {
         "ParameterKey": "QSS3KeyPrefixHANA",
-        "ParameterValue": "quickstart-reference/sap/hana/latest/scripts"
+        "ParameterValue": "aws-quickstart/quickstart-sap-hana/scripts"
     },
     {
         "ParameterKey": "Proxy",
