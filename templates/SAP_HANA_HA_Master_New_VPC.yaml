@@ -379,9 +379,9 @@ Metadata:
       SAPTZ:
         default: Enter SAP HANA Server timezone
       PrimaryHANASite:
-        default: HANA Primary Site Name (3 Char)
+        default: HANA Primary Site Name
       SecondaryHANASite:
-        default: HANA Secondary Site Name (3 Char)
+        default: HANA Secondary Site Name
       VirtualIPAddress:
         default: Overlay IP Address
       PaceMakerTag:
