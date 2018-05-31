@@ -68,10 +68,6 @@
         "ParameterValue": "s3://quickstart-ci-media/sap/hana/sps12/"
     },
     {
-        "ParameterKey": "MyS3Bucket",
-        "ParameterValue": ""
-    },
-    {
         "ParameterKey": "EnableLogging",
         "ParameterValue": "No"
     },
