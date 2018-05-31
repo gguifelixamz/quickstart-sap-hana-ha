@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: SAP HANA High Availability - New VPC Setup
 Parameters:
   AvailabilityZones:
-     Description : List of Availability Zones to use for the subnets in the VPC. The logical order is preserved.
+     Description : List of Availability Zones to use for the subnets in the VPC. The logical order is preserved and only first two are considered.
      Type : List<AWS::EC2::AvailabilityZone::Name> 
   VPCCIDR:
      ConstraintDescription : CIDR block parameter must be in the form x.x.x.x/16-28
@@ -81,21 +81,17 @@ Parameters:
     Description: Full path to Amazon S3 location of SAP HANA software files (e.g. s3://myhanabucket/sap-hana-sps11/).
     Default: ''
     Type: String
-  MyS3Bucket:
-    Description: S3 Bucket to store temp config objects, if empty will be created.
-    Default: ''
-    Type: String
   QSS3BucketName:
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*[^/]$"
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-) but should not end with forward slash (/)
     Default: aws-quickstart
-    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+    Description: S3 bucket name for the Quick Start HANA-HA assets.
     Type: String
   QSS3KeyPrefix:
     AllowedPattern: "^[0-9a-zA-Z-/]*[^/]$"
     ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/) but should not end with forward slash (/).
     Default: quickstart-sap-hana-ha
-    Description: S3 key prefix for the Quick Start assets. 
+    Description: S3 key prefix for the Quick Start HANA-HA assets. 
     Type: String
   EnableLogging:
     Description: Enable (Yes) or disable (No) logging with AWS CloudTrail and AWS Config.
@@ -138,7 +134,7 @@ Parameters:
       - io1
   MyOS:
     Type: String
-    Description: Operating system (SLES or RHEL) and version for master and worker nodes.
+    Description: Operating system (SLES for SAP) and version for master nodes.
     Default: SuSELinux12SP3ForSAP
     AllowedValues:
       - SuSELinux12SP1ForSAP
@@ -146,6 +142,7 @@ Parameters:
       - SuSELinux12SP3ForSAP 
       - SuSELinux12SP1ForSAP-BYOS
       - SuSELinux12SP2ForSAP-BYOS
+      - SuSELinux12SP3ForSAP-BYOS
   SLESBYOSRegCode:
     Type: String
     Default: ''
@@ -239,7 +236,7 @@ Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
       - Label:
-          default: VPC infrastructure details
+          default: Network infrastructure configuration
         Description:
           default: ''
         Parameters:
@@ -277,14 +274,18 @@ Metadata:
           - SID
           - SAPInstanceNum
           - HANAMasterPass
+          - SAPTZ
+          - HANAInstallMedia
+          - InstallHANA
+      - Label : 
+          default : SAP HANA High Availability configuration
+        Description:
+          default: ''
+        Parameters:
           - PrimaryHANASite
           - SecondaryHANASite
           - VirtualIPAddress
           - PaceMakerTag
-          - SAPTZ
-          - HANAInstallMedia
-          - MyS3Bucket
-          - InstallHANA
       - Label:
           default: Optional configuration
         Description:
@@ -311,7 +312,7 @@ Metadata:
       PublicSubnet1CIDR:
         default: Enter CIDR block for Public subnet 1
       PublicSubnet2CIDR:
-        default: Enter CIDR block for Public subnet 1
+        default: Enter CIDR block for Public subnet 2
       PrivateSubnet1CIDR:
         default: CIDR block for Private subnet 1
       PrivateSubnet2CIDR:
@@ -330,8 +331,6 @@ Metadata:
         default: Enter SAP HANA Primary host name
       HANAInstallMedia:
         default: Enter Amazon S3 URL for SAP HANA software
-      MyS3Bucket:
-        default: S3 Bucket for temp config objects
       QSS3BucketName:
         default: S3 Bucket containg SAP HANA-HA assets
       QSS3KeyPrefix:
@@ -414,7 +413,7 @@ Resources:
     Properties:
       TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreTasks.yaml
       Parameters:
-        MyS3Bucket: !Ref MyS3Bucket
+        MyS3Bucket: ''
         QSS3BucketName: !Sub ${QSS3BucketName} 
         QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}/scripts
         PrivSubnet1: !GetAtt 

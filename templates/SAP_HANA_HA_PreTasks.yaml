@@ -202,7 +202,7 @@ Resources:
                    else:
                        if (validate_common_route_table(subnet1, subnet2)):
                               copy_objects(source_bucket, dest_bucket, prefix, objects)
-                              responseStr['Status']['PreTasksLambdaFunction'] = "All Good"
+                              responseStr['Status']['PreTasksLambdaFunction'] = "Sucess"
                        else:
                               logging.error('Route Table Not Same for Private Subnets', exc_info=True)
                               responseStr['Status']['PreTasksLambdaFunction'] = "Route Table Needs to be Same for Private Subnets"

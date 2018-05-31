@@ -84,10 +84,6 @@ Parameters:
     Description: Full path to Amazon S3 location of SAP HANA software files (e.g. s3://myhanabucket/sap-hana-sps11/).
     Default: ''
     Type: String
-  MyS3Bucket:
-    Description: S3 Bucket to store temp config objects, if empty will be created.
-    Default: ''
-    Type: String
   QSS3BucketName:
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*[^/]$"
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-) but should not end with forward slash (/)
@@ -141,7 +137,7 @@ Parameters:
       - io1
   MyOS:
     Type: String
-    Description: Operating system (SLES or RHEL) and version for master and worker nodes.
+    Description: Operating system (SLES for SAP) and version for master nodes.
     Default: SuSELinux12SP3ForSAP
     AllowedValues:
       - SuSELinux12SP1ForSAP
@@ -243,20 +239,20 @@ Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
       - Label:
-          default: VPC infrastructure details
+          default: Network infrastructure configuration
         Description:
           default: ''
         Parameters:
+          - VPCID
           - AvailabilityZones
           - NumberOfAZs
-          - PrivateSubnet1CIDR
-          - PrivateSubnet2CIDR
-          - PublicSubnet1CIDR
           - PrivateSubnet1ID
           - PrivateSubnet2ID
           - PublicSubnet1ID
+          - PrivateSubnet1CIDR
+          - PrivateSubnet2CIDR
+          - PublicSubnet1CIDR
           - ApplicationCIDR
-          - VPCID
           - VPCTenancy
       - Label:
           default: Server and storage configuration
@@ -283,14 +279,18 @@ Metadata:
           - SID
           - SAPInstanceNum
           - HANAMasterPass
+          - SAPTZ
+          - HANAInstallMedia
+          - InstallHANA
+      - Label : 
+          default : SAP HANA High Availability configuration
+        Description:
+          default: ''
+        Parameters:
           - PrimaryHANASite
           - SecondaryHANASite
           - VirtualIPAddress
           - PaceMakerTag
-          - SAPTZ
-          - HANAInstallMedia
-          - MyS3Bucket
-          - InstallHANA
       - Label:
           default: Optional configuration
         Description:
@@ -338,8 +338,6 @@ Metadata:
         default: Enter SAP HANA Primary host name
       HANAInstallMedia:
         default: Enter Amazon S3 URL for SAP HANA software
-      MyS3Bucket:
-        default: S3 Bucket for temp config objects
       QSS3BucketName:
         default: S3 Bucket containg SAP HANA-HA assets
       QSS3KeyPrefix:
@@ -406,7 +404,7 @@ Resources:
     Properties:
       TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreTasks.yaml
       Parameters:
-        MyS3Bucket: !Ref MyS3Bucket
+        MyS3Bucket: ''
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}/scripts
         PrivSubnet1: !Ref PrivateSubnet1ID
