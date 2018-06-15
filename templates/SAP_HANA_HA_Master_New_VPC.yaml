@@ -584,6 +584,7 @@ Resources:
                         - Outputs.HANAMasterInstanceId
           HANAHostnamePrimary: !Ref HANAHostnamePrimary
           HANAHostnameSecondary: !Ref HANAHostnameSecondary
+          PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
           PaceMakerTag: !Ref PaceMakerTag
           VirtualIPAddress: !Ref VirtualIPAddress
           PrimaryHANASite: !Ref PrimaryHANASite

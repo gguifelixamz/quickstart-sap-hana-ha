@@ -6,7 +6,12 @@ Parameters:
      Type: 'AWS::EC2::Subnet::Id' 
   SecondarySubnetId:
      Description : Private Subnet ID of Secondary Instance
-     Type: 'AWS::EC2::Subnet::Id' 
+     Type: 'AWS::EC2::Subnet::Id'
+  PublicSubnet1CIDR:
+     ConstraintDescription :  CIDR block parameter must be in the form x.x.x.x/16-28
+     Default : ''
+     Description : CIDR block for the public DMZ subnet 1 located in Availability Zone 1
+     Type :  String
   HANAPrimaryIPAddress:
     Type: String
     AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})'
@@ -95,6 +100,7 @@ Metadata:
           - HANASecondaryIPAddress
           - HANAHostnamePrimary
           - HANAHostnameSecondary
+          - PublicSubnet1CIDR
       - Label:
           default: HANA Instance Details
         Description:
@@ -118,6 +124,8 @@ Metadata:
         default: SubnetID Primary HANA
       SecondarySubnetId:
         default: SubnetID Secondary HANA
+      PublicSubnet1CIDR:
+        default: CIDR for public subnet
       DomainName:
         default: Domain Name
       HANAHostnameSecondary:
@@ -194,6 +202,7 @@ Resources:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       GroupId: !Ref HANAPrimarySecurityGroup
+      Description: HA Cluster health check UDP port from Secondary HANA
       IpProtocol: udp
       FromPort: '5405'
       ToPort: '5405'
@@ -206,6 +215,7 @@ Resources:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       GroupId: !Ref HANAPrimarySecurityGroup
+      Description: ICMP Port from Secondary HANA
       IpProtocol: icmp
       FromPort: '-1'
       ToPort: '-1'
@@ -214,10 +224,22 @@ Resources:
         - - !Ref HANASecondaryIPAddress
           - /32
 
+  UpdateSecurityGroupPrimaryHAWK:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref HANAPrimarySecurityGroup
+      Description: Hawk port from public subnet
+      IpProtocol: tcp
+      FromPort: '7630'
+      ToPort: '7630'
+      CidrIp: !Ref PublicSubnet1CIDR
+
+
   UpdateSecurityGroupPrimaryTCP:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       GroupId: !Ref HANAPrimarySecurityGroup
+      Description: All tcp ports from Secondary HANA
       IpProtocol: tcp
       FromPort: '0'
       ToPort: '65535'
@@ -230,6 +252,7 @@ Resources:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       GroupId: !Ref HANASecondarySecurityGroup
+      Description: HA Cluster health check UDP port from Primary HANA
       IpProtocol: udp
       FromPort: '5405'
       ToPort: '5405'
@@ -242,6 +265,7 @@ Resources:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       GroupId: !Ref HANASecondarySecurityGroup
+      Description: ICMP From Primary HANA
       IpProtocol: icmp
       FromPort: '-1'
       ToPort: '-1'
@@ -250,10 +274,21 @@ Resources:
         - - !Ref HANAPrimaryIPAddress
           - /32
 
+  UpdateSecurityGroupPrimaryHAWK:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref HANASecondarySecurityGroup
+      Description: Hawk port from public subnet
+      IpProtocol: tcp
+      FromPort: '7630'
+      ToPort: '7630'
+      CidrIp: !Ref PublicSubnet1CIDR
+
   UpdateSecurityGroupSecondaryTCP:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       GroupId: !Ref HANASecondarySecurityGroup
+      Description: All TCP From Primary HANA
       IpProtocol: tcp
       FromPort: '0'
       ToPort: '65535'

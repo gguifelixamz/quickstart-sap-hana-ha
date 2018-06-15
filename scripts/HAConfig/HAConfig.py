@@ -269,7 +269,7 @@ def CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,han
     CommandArray.append('echo "op monitor interval=60 role=Master timeout=700 \\\\" >> /root/ClusterSetup/crm-saphana.txt')
     CommandArray.append('echo "op monitor interval=61 role=Slave timeout=700 \\\\" >> /root/ClusterSetup/crm-saphana.txt')
     CommandArray.append('echo "params SID='+hanaSID.upper()+' InstanceNumber='+hanaInstanceNo+' PREFER_SITE_TAKEOVER=true \\\\" >> /root/ClusterSetup/crm-saphana.txt')
-    CommandArray.append('echo "DUPLICATE_PRIMARY_TIMEOUT=7200 AUTOMATED_REGISTER=false" >> /root/ClusterSetup/crm-saphana.txt')
+    CommandArray.append('echo "DUPLICATE_PRIMARY_TIMEOUT=7200 AUTOMATED_REGISTER=true" >> /root/ClusterSetup/crm-saphana.txt')
     CommandArray.append('echo "ms msl_SAPHana_'+hanaSID.upper()+'_HDB'+hanaInstanceNo+' rsc_SAPHana_'+hanaSID.upper()+'_HDB'+hanaInstanceNo+' \\\\" >> /root/ClusterSetup/crm-saphana.txt')
     CommandArray.append('echo "meta clone-max=2 clone-node-max=1 interleave=true" >> /root/ClusterSetup/crm-saphana.txt')
     CommandArray.append('crm configure load update /root/ClusterSetup/crm-saphana.txt')
@@ -283,13 +283,17 @@ def CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,han
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
 
 
-def StartPaceMaker(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion):
+def StartPaceMaker(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAMasterPass,AWSRegion):
     CommandArray=[]
+    CommandArray.append('echo "hacluster:'+HANAMasterPass+'" | chpasswd')
     CommandArray.append('systemctl start pacemaker')
-    CommentStr = 'Start Pacemaker on Primary'
+    CommandArray.append('chkconfig pacemaker on')
+    CommandArray.append('systemctl start hawk')
+    CommandArray.append('chkconfig hawk on')
+    CommentStr = 'Start Pacemaker on Primary and configure for autostart with OS'
     InstanceIDArray =[HANAPrimaryInstanceID]
     if ( executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion) == 1 ):
-        CommentStr = 'Start Pacemaker on Secondary'
+        CommentStr = 'Start Pacemaker on Secondary and configure for autostart with OS'
         InstanceIDArray =[HANASecondaryInstanceID]
         return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
     else:
@@ -351,7 +355,7 @@ def createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecon
     CommentStr = 'CoroSync cofigfile on Primary'
     InstanceIDArray =[HANAPrimaryInstanceID]
     if ( executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion) == 1 ):
-        CommandArray[9]='echo "                bindnetaddr: '+HANASecondaryIPAddress+'" >> /etc/corosync/corosync.conf'
+        CommandArray[12]='echo "                bindnetaddr: '+HANASecondaryIPAddress+'" >> /etc/corosync/corosync.conf'
         CommentStr = 'CoroSync cofigfile on Secondary'
         InstanceIDArray =[HANASecondaryInstanceID]
         return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
@@ -487,7 +491,7 @@ def lambda_handler(input, context):
             retValue = createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecondaryIPAddress,HANAPrimaryIPAddress,AWSRegion)
             manageRetValue(retValue,"createCoroSyncConfig",input, context)
 
-            retValue = StartPaceMaker(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
+            retValue = StartPaceMaker(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAMasterPass,AWSRegion)
             manageRetValue(retValue,"StartPaceMaker",input, context)
 
             retValue = CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,hanaInstanceNo,PaceMakerTag,AWSRegion)
