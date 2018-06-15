@@ -65,7 +65,7 @@
     },
     {
         "ParameterKey": "HANAInstallMedia",
-        "ParameterValue": "s3://quickstart-ci-media/sap/hana/sps12/"
+        "ParameterValue": "s3://$[taskcat_getmediabucket]/sap/hana/sps12/"
     },
     {
         "ParameterKey": "EnableLogging",
