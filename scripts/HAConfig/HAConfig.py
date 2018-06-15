@@ -225,7 +225,7 @@ def CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,han
     CommandArray.append('echo "primitive res_AWS_STONITH stonith:external/ec2 \\\\" > /root/ClusterSetup/aws-stonith.txt')
     CommandArray.append('echo "op start interval=0 timeout=180 \\\\" >> /root/ClusterSetup/aws-stonith.txt')
     CommandArray.append('echo "op stop interval=0 timeout=180 \\\\" >> /root/ClusterSetup/aws-stonith.txt')
-    CommandArray.append('echo "op monitor interval=30 timeout=30 \\\\" >> /root/ClusterSetup/aws-stonith.txt')
+    CommandArray.append('echo "op monitor interval=120 timeout=60 \\\\" >> /root/ClusterSetup/aws-stonith.txt')
     CommandArray.append('echo "meta target-role=Started \\\\" >> /root/ClusterSetup/aws-stonith.txt')
     CommandArray.append('echo "params tag='+PaceMakerTag+' profile=cluster" >> /root/ClusterSetup/aws-stonith.txt')
     CommandArray.append('crm configure load update /root/ClusterSetup/aws-stonith.txt')
@@ -234,7 +234,7 @@ def CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,han
     CommandArray.append('echo "params address='+HANAVirtualIP+' routing_table='+RTabId+' interface=eth0 profile=cluster \\\\" >> /root/ClusterSetup/aws-ip-move.txt')
     CommandArray.append('echo "op start interval=0 timeout=180 \\\\" >> /root/ClusterSetup/aws-ip-move.txt')
     CommandArray.append('echo "op stop interval=0 timeout=180 \\\\" >> /root/ClusterSetup/aws-ip-move.txt')
-    CommandArray.append('echo "op monitor interval=30 timeout=30 \\\\" >> /root/ClusterSetup/aws-ip-move.txt')
+    CommandArray.append('echo "op monitor interval=60 timeout=60 \\\\" >> /root/ClusterSetup/aws-ip-move.txt')
     CommandArray.append('echo "meta target-role=Started" >> /root/ClusterSetup/aws-ip-move.txt')
     CommandArray.append('crm configure load update /root/ClusterSetup/aws-ip-move.txt')
 

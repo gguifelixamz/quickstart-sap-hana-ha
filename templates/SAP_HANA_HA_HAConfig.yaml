@@ -274,7 +274,7 @@ Resources:
         - - !Ref HANAPrimaryIPAddress
           - /32
 
-  UpdateSecurityGroupPrimaryHAWK:
+  UpdateSecurityGroupSecondaryHAWK:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       GroupId: !Ref HANASecondarySecurityGroup
