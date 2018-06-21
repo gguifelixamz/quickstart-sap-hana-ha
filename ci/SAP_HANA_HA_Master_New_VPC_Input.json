@@ -24,10 +24,6 @@
         "ParameterValue": "10.0.2.0/24"
     },
     {
-        "ParameterKey": "VPCTenancy",
-        "ParameterValue": "default"
-    },
-    {
         "ParameterKey": "RemoteAccessCIDR",
         "ParameterValue": "0.0.0.0/0"
     },
@@ -48,11 +44,11 @@
         "ParameterValue": "sechana"
     },
     {
-        "ParameterKey": "QSS3BucketNameHANA",
+        "ParameterKey": "PrivateBucket",
         "ParameterValue": "aws-quickstart/quickstart-sap-hana"
     },
     {
-        "ParameterKey": "QSS3KeyPrefixHANA",
+        "ParameterKey": "CustomStorageConfig",
         "ParameterValue": "aws-quickstart/quickstart-sap-hana/scripts"
     },
     {
@@ -74,10 +70,6 @@
     {
         "ParameterKey": "CloudTrailS3Bucket",
         "ParameterValue": ""
-    },
-    {
-        "ParameterKey": "AutoRecovery",
-        "ParameterValue": "Yes"
     },
     {
         "ParameterKey": "Encryption",
