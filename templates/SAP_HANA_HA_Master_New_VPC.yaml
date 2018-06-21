@@ -34,13 +34,6 @@ Parameters:
      Default : 0.0.0.0/0
      Description : CIDR block where application will be deployed
      Type : String
-  VPCTenancy:
-      AllowedValues:
-        - "default"
-        - "dedicated"
-      Default: 'default'
-      Description: The allowed tenancy of instances launched into the VPC
-      Type : String
   RemoteAccessCIDR:
     Description: CIDR block from where you want to access your RDP instance.
     Type: String
@@ -61,11 +54,11 @@ Parameters:
     Type: String
     Description: Host name to use for SAP HANA Secondary node (DNS short name).
     Default: sechana
-  QSS3BucketNameHANA:
+  PrivateBucket:
     Description: Main build bucket where templates and scripts are located.
     Type: String
     Default: aws-quickstart/quickstart-sap-hana
-  QSS3KeyPrefixHANA:
+  CustomStorageConfig:
     Description: S3 location where custom storage configuration file is localted.
     Type: String
     Default: aws-quickstart/quickstart-sap-hana/scripts
@@ -104,13 +97,6 @@ Parameters:
     Description: Name of S3 bucket where AWS CloudTrail trails and AWS Config log files can be stored (e.g., mycloudtrail).
     Default: ''
     Type: String
-  AutoRecovery:
-    Type: String
-    Description: Enable (Yes) or disable (No) automatic recovery feature for SAP HANA nodes.
-    Default: 'Yes'
-    AllowedValues:
-      - 'Yes'
-      - 'No'
   Encryption:
     Type: String
     Description: Enable (Yes) or disable (No) encryption on EBS volumes.
@@ -242,13 +228,10 @@ Metadata:
         Parameters:
           - VPCCIDR
           - AvailabilityZones
-          - NumberOfAZs
           - PrivateSubnet1CIDR
           - PrivateSubnet2CIDR
           - PublicSubnet1CIDR
           - PublicSubnet2CIDR
-          - ApplicationCIDR
-          - VPCTenancy
       - Label:
           default: Server and storage configuration
         Description:
@@ -257,8 +240,6 @@ Metadata:
           - MyOS
           - SLESBYOSRegCode
           - MyInstanceType
-          - HostCount
-          - AutoRecovery
           - KeyName
           - VolumeTypeHanaLog
           - VolumeTypeHanaData
@@ -296,14 +277,15 @@ Metadata:
           - RemoteAccessCIDR
           - EnableLogging
           - CloudTrailS3Bucket
+          - ApplicationCIDR
           - Proxy
       - Label:
           default: Advanced configuration (Do not modify unless directed by AWS Support)
         Description:
           default: ''
         Parameters:
-          - QSS3BucketNameHANA
-          - QSS3KeyPrefixHANA
+          - PrivateBucket
+          - CustomStorageConfig
           - QSS3BucketName
           - QSS3KeyPrefix
     ParameterLabels:
@@ -337,16 +319,14 @@ Metadata:
         default: Prefix for SAP HANA-HA assets Bucket
       CloudTrailS3Bucket:
         default: Enter S3 bucket name to store AWS CloudTrail trails and AWS Config logs
-      QSS3BucketNameHANA:
+      PrivateBucket:
         default: S3 Bucket containg SAP HANA assets
-      QSS3KeyPrefixHANA:
+      CustomStorageConfig:
         default: Enter custom storage configuration location
       Proxy:
         default: Enter proxy server address
       KeyName:
         default: Choose key pair
-      AutoRecovery:
-        default: Would you like to turn on automatic recovery?
       InstallRDPInstance:
         default: Do you need a Windows RDP instance?
       InstallHANA:
@@ -363,8 +343,6 @@ Metadata:
         default: Enter SUSE BYOS Registration Code
       MyInstanceType:
         default: Choose instance type for SAP HANA
-      HostCount:
-        default: Enter number of SAP HANA hosts
       SID:
         default: Enter SAP HANA system ID
       SAPInstanceNum:
@@ -404,7 +382,6 @@ Resources:
         PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
         PublicSubnet2CIDR: !Ref PublicSubnet2CIDR
         VPCCIDR: !Ref VPCCIDR
-        VPCTenancy: !Ref VPCTenancy
       TimeoutInMinutes: '7200'
 
   PreTasks:
@@ -449,8 +426,8 @@ Resources:
         HANAMasterHostname: !Ref HANAHostnamePrimary
         HANAWorkerHostname: dummy
         PlacementGroupName: !Ref 'AWS::NoValue'
-        PrivateBucket: !Ref QSS3BucketNameHANA
-        CustomStorageConfig: !Ref QSS3KeyPrefixHANA
+        PrivateBucket: !Ref PrivateBucket
+        CustomStorageConfig: !Ref CustomStorageConfig
         Proxy: !Ref Proxy
         KeyName: !Ref KeyName
         MyOS: !Ref MyOS
@@ -464,7 +441,7 @@ Resources:
         SAPInstanceNum: !Ref SAPInstanceNum
         HANAMasterPass: !Ref HANAMasterPass
         HANAInstallMedia: !Ref HANAInstallMedia
-        AutoRecovery: !Ref AutoRecovery
+        AutoRecovery: 'No'
         CloudTrailS3Bucket: !Ref CloudTrailS3Bucket
         EnableLogging: !Ref EnableLogging
         SAPTZ: !Ref SAPTZ
@@ -498,8 +475,8 @@ Resources:
         HANAMasterHostname: !Ref HANAHostnameSecondary
         HANAWorkerHostname: dummy
         PlacementGroupName: !Ref 'AWS::NoValue'
-        PrivateBucket: !Ref QSS3BucketNameHANA
-        CustomStorageConfig: !Ref QSS3KeyPrefixHANA
+        PrivateBucket: !Ref PrivateBucket
+        CustomStorageConfig: !Ref CustomStorageConfig
         Proxy: !Ref Proxy
         KeyName: !Ref KeyName
         MyOS: !Ref MyOS
@@ -513,7 +490,7 @@ Resources:
         SAPInstanceNum: !Ref SAPInstanceNum
         HANAMasterPass: !Ref HANAMasterPass
         HANAInstallMedia: !Ref HANAInstallMedia
-        AutoRecovery: !Ref AutoRecovery
+        AutoRecovery: 'No'
         CloudTrailS3Bucket: !Ref CloudTrailS3Bucket
         EnableLogging: !Ref EnableLogging
         SAPTZ: !Ref SAPTZ
