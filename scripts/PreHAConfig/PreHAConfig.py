@@ -65,7 +65,7 @@ def manageRetValue(retValue,FuncName,input, context):
         responseStr['Status'][FuncName] = "Success"
     else:
         responseStr['Status'][FuncName] = "Failed"
-        cfnresponse.send(input, context, cfnresponse.FAILED, responseStr)
+        cfnresponse.send(input, context, cfnresponse.FAILED, {'Status':json.dumps(responseStr)})
         sys.exit(0)
 
 

@@ -368,6 +368,7 @@ Conditions:
   InstallHANAorNot: !Equals [ !Ref InstallHANA, 'Yes' ]
 
 Resources:
+
   CreateVPC:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
@@ -393,18 +394,34 @@ Resources:
         MyS3Bucket: ''
         QSS3BucketName: !Sub ${QSS3BucketName} 
         QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}/scripts
-        PrivSubnet1: !GetAtt 
-                        - CreateVPC
-                        - Outputs.PrivateSubnet1ID
-        PrivSubnet2: !GetAtt 
-                        - CreateVPC
-                        - Outputs.PrivateSubnet2ID
+      TimeoutInMinutes: '7200'
+
+  ValidateParameters:
+    Type: 'AWS::CloudFormation::Stack'
+    DependsOn: PreTasks
+    Properties:
+      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_ValidateParameters.yaml
+      Parameters:
+        LambdaBucket: !GetAtt 
+                            - PreTasks
+                            - Outputs.MyS3Bucket
+        LambdaBucketPreFix: !Sub ${QSS3KeyPrefix}/scripts
+        PrimarySubnetId: !GetAtt 
+            - CreateVPC
+            - Outputs.PrivateSubnet1ID
+        SecondarySubnetId: !GetAtt 
+            - CreateVPC
+            - Outputs.PrivateSubnet2ID
+        VPCID: !GetAtt 
+            - CreateVPC
+            - Outputs.VPCID
+        PaceMakerTag: !Ref PaceMakerTag
+        VirtualIPAddress: !Ref VirtualIPAddress
       TimeoutInMinutes: '7200'
 
   PrimaryInstance:
     DependsOn: 
-      - CreateVPC
-      - PreTasks
+      - ValidateParameters
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/submodules/quickstart-sap-hana/templates/SAP-HANA-BaseNodes.template
@@ -452,8 +469,7 @@ Resources:
 
   SecondaryInstance:
     DependsOn: 
-      - CreateVPC
-      - PreTasks
+      - ValidateParameters
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/submodules/quickstart-sap-hana/templates/SAP-HANA-BaseNodes.template
@@ -503,7 +519,6 @@ Resources:
     DependsOn: 
         - PrimaryInstance
         - SecondaryInstance
-        - PreTasks
     Condition: InstallHANAorNot
     Type: 'AWS::CloudFormation::Stack'
     Properties:
@@ -544,9 +559,6 @@ Resources:
 
   HAConfig:
     DependsOn: 
-        - PrimaryInstance
-        - SecondaryInstance
-        - PreTasks
         - PreHAConfig
     Condition: InstallHANAorNot
     Type: 'AWS::CloudFormation::Stack'
