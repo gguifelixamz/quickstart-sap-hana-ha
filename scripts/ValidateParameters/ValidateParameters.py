@@ -17,8 +17,9 @@ def check_duplicate_virtual_ip(routeTableID,virtualip):
     ec2client = boto3.client('ec2')
     response = ec2client.describe_route_tables(RouteTableIds=[routeTableID])
     for destination in response['RouteTables'][0]['Routes']:
-      if destination['DestinationCidrBlock'].split('/')[0] == virtualip:
-        return True
+        if 'DestinationCidrBlock' in destination:
+            if destination['DestinationCidrBlock'].split('/')[0] == virtualip:
+                return True
     return False
 
 def count_instances_by_tagkey(tagkey):            
@@ -78,13 +79,13 @@ def handler(input, context):
               responseStr["Status"]["ValidateParametersLambda"] =  "Virtual IP address should not be in VPC CIDR"       
               cfnresponse.send(input, context, cfnresponse.FAILED, {'Status':'Virtual IP address should not be in VPC CIDR'})  
               return 
-
+          
             if not validate_common_route_table(subnet1, subnet2,vpcId):
               #Route Table not common
               responseStr["Status"]["ValidateParametersLambda"] =  "Primary and Secondary Subnet must have same route table"       
               cfnresponse.send(input, context, cfnresponse.FAILED, {'Status':'Primary and Secondary Subnet must have same route table'}) 
               return 
-
+            
             if check_duplicate_virtual_ip(routeTableID,virtualip):
               #Virtual IP already in usage
               responseStr["Status"]["ValidateParametersLambda"] =  "Virtual IP is already being used (in Route Table of Subnet)"       
