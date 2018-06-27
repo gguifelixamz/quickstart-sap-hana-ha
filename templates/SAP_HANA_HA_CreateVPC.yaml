@@ -163,10 +163,7 @@ Resources:
         Ref: VPC
       CidrBlock:
         Ref: PublicSubnet2CIDR
-      AvailabilityZone:
-        Fn::Select:
-        - '1'
-        - Ref: AvailabilityZones
+      AvailabilityZone: !Select [ 1, Ref: AvailabilityZones ]
       Tags:
       - Key: Name
         Value: Public subnet 2

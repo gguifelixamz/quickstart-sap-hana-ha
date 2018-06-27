@@ -289,8 +289,10 @@ Metadata:
           - QSS3BucketName
           - QSS3KeyPrefix
     ParameterLabels:
-      VPCID:
-        default: Choose VPC ID
+      VPCCIDR:
+        default: VPC CIDR
+      AvailabilityZones:
+        default: Availability Zones for subnet creation
       PublicSubnet1CIDR:
         default: Enter CIDR block for Public subnet 1
       PublicSubnet2CIDR:
@@ -310,7 +312,7 @@ Metadata:
       HANAHostnamePrimary:
         default: Enter SAP HANA Primary host name
       HANAHostnameSecondary:
-        default: Enter SAP HANA Primary host name
+        default: Enter SAP HANA Secondary host name
       HANAInstallMedia:
         default: Enter Amazon S3 URL for SAP HANA software
       QSS3BucketName:

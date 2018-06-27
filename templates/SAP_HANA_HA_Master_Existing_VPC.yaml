@@ -324,7 +324,7 @@ Metadata:
       HANAHostnamePrimary:
         default: Enter SAP HANA Primary host name
       HANAHostnameSecondary:
-        default: Enter SAP HANA Primary host name
+        default: Enter SAP HANA Secondary host name
       HANAInstallMedia:
         default: Enter Amazon S3 URL for SAP HANA software
       QSS3BucketName:
