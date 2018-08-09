@@ -26,20 +26,14 @@ Parameters:
      Type :  String 
   PublicSubnet1ID:
      ConstraintDescription :  Subnet ID must be in format subnet-xxxxxxxx
-     Default: subnet-xxxxxxxx
-     AllowedPattern: 'subnet-[0-9a-z]{8}'
      Description : Public DMZ subnet
      Type :  'AWS::EC2::Subnet::Id' 
   PrivateSubnet1ID:
      ConstraintDescription : Subnet ID must be in format subnet-xxxxxxxx
-     Default: subnet-xxxxxxxx
-     AllowedPattern: 'subnet-[0-9a-z]{8}'
      Description : Private subnet 1 in Availability Zone 1
      Type : 'AWS::EC2::Subnet::Id' 
   PrivateSubnet2ID:
      ConstraintDescription : Subnet ID must be in format subnet-xxxxxxxx
-     Default: subnet-xxxxxxxx
-     AllowedPattern: 'subnet-[0-9a-z]{8}'
      Description : Private subnet 2 in Availability Zone 2
      Type : 'AWS::EC2::Subnet::Id'
   RemoteAccessCIDR:
