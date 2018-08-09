@@ -4,8 +4,6 @@ Parameters:
   VPCID:
      Type: 'AWS::EC2::VPC::Id'
      Description: The existing Amazon VPC where you want to deploy SAP HANA.
-     Default: vpc-xxxxxxxx
-     AllowedPattern: 'vpc-[0-9a-z]{8}'
   PublicSubnet1CIDR:
      ConstraintDescription :  CIDR block parameter must be in the form x.x.x.x/16-28
      Default : ''
