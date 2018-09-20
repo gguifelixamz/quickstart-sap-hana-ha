@@ -8,12 +8,12 @@ Parameters:
      ConstraintDescription :  CIDR block parameter must be in the form x.x.x.x/16-28
      Default : ''
      Description : CIDR block for the public DMZ subnet 1 located in Availability Zone 1
-     Type :  String 
+     Type :  String
   PrivateSubnet1CIDR:
      ConstraintDescription : CIDR block parameter must be in the form x.x.x.x/16-28
      Default : ''
      Description : CIDR block for the private subnet 1 located in Availability Zone 1
-     Type : String 
+     Type : String
   PrivateSubnet2CIDR:
      ConstraintDescription : CIDR block parameter must be in the form x.x.x.x/16-28
      Default : ''
@@ -23,15 +23,15 @@ Parameters:
      ConstraintDescription : CIDR block parameter must be in the form x.x.x.x/16-28
      Default : '0.0.0.0/0'
      Description : CIDR block for the private subnet where Application will be installed
-     Type :  String 
+     Type :  String
   PublicSubnet1ID:
      ConstraintDescription :  Subnet ID must be in format subnet-xxxxxxxx
      Description : Public DMZ subnet
-     Type :  'AWS::EC2::Subnet::Id' 
+     Type :  'AWS::EC2::Subnet::Id'
   PrivateSubnet1ID:
      ConstraintDescription : Subnet ID must be in format subnet-xxxxxxxx
      Description : Private subnet 1 in Availability Zone 1
-     Type : 'AWS::EC2::Subnet::Id' 
+     Type : 'AWS::EC2::Subnet::Id'
   PrivateSubnet2ID:
      ConstraintDescription : Subnet ID must be in format subnet-xxxxxxxx
      Description : Private subnet 2 in Availability Zone 2
@@ -86,7 +86,7 @@ Parameters:
     AllowedPattern: "^[0-9a-zA-Z-/]*[^/]$"
     ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/) but should not end with forward slash (/).
     Default: quickstart-sap-hana-ha
-    Description: S3 key prefix for the Quick Start assets. 
+    Description: S3 key prefix for the Quick Start assets.
     Type: String
   EnableLogging:
     Description: Enable (Yes) or disable (No) logging with AWS CloudTrail and AWS Config.
@@ -127,7 +127,7 @@ Parameters:
     AllowedValues:
       - SuSELinux12SP1ForSAP
       - SuSELinux12SP2ForSAP
-      - SuSELinux12SP3ForSAP 
+      - SuSELinux12SP3ForSAP
       - SuSELinux12SP1ForSAP-BYOS
       - SuSELinux12SP2ForSAP-BYOS
       - SuSELinux12SP3ForSAP-BYOS
@@ -156,8 +156,12 @@ Parameters:
     AllowedValues:
       - c4.large
       - c4.xlarge
+      - c5.large
+      - c5.xlarge
       - m4.large
       - m4.xlarge
+      - m5.large
+      - m5.xlarge
   MyInstanceType:
     Type: String
     Description: Instance type for SAP HANA host.
@@ -172,6 +176,8 @@ Parameters:
       - r4.2xlarge
       - x1.16xlarge
       - x1.32xlarge
+      - x1e.xlarge
+      - x1e.2xlarge
       - x1e.4xlarge
       - x1e.32xlarge
   SID:
@@ -220,6 +226,10 @@ Parameters:
     Description: Pacemaker Tag name (Should not be already assigned to any instance)
     Type: String
     Default: PaceTag
+  DedicatedHostId:
+    Description: Existing dedicated host(s) where you want to launch your EC2 instance(s). Use comma to provide multiple hosts.
+    Type: CommaDelimitedList
+    Default: ''
 Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
@@ -262,7 +272,7 @@ Metadata:
           - SAPTZ
           - HANAInstallMedia
           - InstallHANA
-      - Label : 
+      - Label :
           default : SAP HANA High Availability configuration
         Description:
           default: ''
@@ -276,6 +286,7 @@ Metadata:
         Description:
           default: ''
         Parameters:
+          - DedicatedHostId
           - InstallRDPInstance
           - RDPInstanceType
           - RemoteAccessCIDR
@@ -369,9 +380,12 @@ Metadata:
         default: Overlay IP Address
       PaceMakerTag:
         default: Pacemaker Tag Name
+      DedicatedHostId:
+        default: Enter Dedicated Host ID
 
-Conditions: 
+Conditions:
   InstallHANAorNot: !Equals [ !Ref InstallHANA, 'Yes' ]
+  IfDedicatedHost: !Not [!Equals [!Select [0, !Ref DedicatedHostId], '']]
 
 
 Resources:
@@ -392,7 +406,7 @@ Resources:
     Properties:
       TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_ValidateParameters.yaml
       Parameters:
-        LambdaBucket: !GetAtt 
+        LambdaBucket: !GetAtt
                             - PreTasks
                             - Outputs.MyS3Bucket
         LambdaBucketPreFix: !Sub ${QSS3KeyPrefix}/scripts
@@ -442,6 +456,7 @@ Resources:
         EnableLogging: !Ref EnableLogging
         SAPTZ: !Ref SAPTZ
         SLESBYOSRegCode: !Ref SLESBYOSRegCode
+        DedicatedHostId:  !If [IfDedicatedHost, !Select [0, !Ref DedicatedHostId], '']
       TimeoutInMinutes: '7200'
 
   SecondaryInstance:
@@ -483,10 +498,11 @@ Resources:
         SLESBYOSRegCode: !Ref SLESBYOSRegCode
         VolumeTypeHanaData: !Ref VolumeTypeHanaData
         VolumeTypeHanaLog: !Ref VolumeTypeHanaLog
+        DedicatedHostId:  !If [IfDedicatedHost, !Select [1, !Ref DedicatedHostId], '']
       TimeoutInMinutes: '7200'
 
   PreHAConfig:
-    DependsOn: 
+    DependsOn:
         - PrimaryInstance
         - SecondaryInstance
     Type: 'AWS::CloudFormation::Stack'
@@ -494,19 +510,19 @@ Resources:
     Properties:
       TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreHAConfig.yaml
       Parameters:
-          HANAPrimaryInstanceId: !GetAtt 
+          HANAPrimaryInstanceId: !GetAtt
                         - PrimaryInstance
                         - Outputs.HANAMasterInstanceId
-          HANASecondaryInstanceId: !GetAtt 
+          HANASecondaryInstanceId: !GetAtt
                         - SecondaryInstance
                         - Outputs.HANAMasterInstanceId
-          HANAPrimaryIPAddress: !GetAtt 
+          HANAPrimaryIPAddress: !GetAtt
                             - PrimaryInstance
                             - Outputs.HANAMasterInstanceIP
-          HANASecondaryIPAddress: !GetAtt 
+          HANASecondaryIPAddress: !GetAtt
                             - SecondaryInstance
                             - Outputs.HANAMasterInstanceIP
-          LambdaBucket: !GetAtt 
+          LambdaBucket: !GetAtt
                             - PreTasks
                             - Outputs.MyS3Bucket
           LambdaBucketPreFix: !Sub ${QSS3KeyPrefix}/scripts
@@ -515,26 +531,26 @@ Resources:
           SAPInstanceNum: !Ref SAPInstanceNum
           PrivSubnet1: !Ref PrivateSubnet1ID
           PrivSubnet2: !Ref PrivateSubnet2ID
-          HANAPrimarySecurityGroup: !GetAtt 
+          HANAPrimarySecurityGroup: !GetAtt
                             - PrimaryInstance
                             - Outputs.HANAMasterSecurityGroup
-          HANASecondarySecurityGroup: !GetAtt 
+          HANASecondarySecurityGroup: !GetAtt
                             - SecondaryInstance
                             - Outputs.HANAMasterSecurityGroup
       TimeoutInMinutes: '7200'
 
   HAConfig:
-    DependsOn: 
+    DependsOn:
         - PreHAConfig
     Type: 'AWS::CloudFormation::Stack'
     Condition: InstallHANAorNot
     Properties:
         TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_HAConfig.yaml
         Parameters:
-          HANAPrimaryInstanceId: !GetAtt 
+          HANAPrimaryInstanceId: !GetAtt
                         - PrimaryInstance
                         - Outputs.HANAMasterInstanceId
-          HANASecondaryInstanceId: !GetAtt 
+          HANASecondaryInstanceId: !GetAtt
                         - SecondaryInstance
                         - Outputs.HANAMasterInstanceId
           HANAHostnamePrimary: !Ref HANAHostnamePrimary
@@ -550,27 +566,27 @@ Resources:
           VPCID: !Ref VPCID
           HANAMasterPass: !Ref HANAMasterPass
           SAPInstanceNum: !Ref SAPInstanceNum
-          HANAPrimaryIPAddress: !GetAtt 
+          HANAPrimaryIPAddress: !GetAtt
                             - PrimaryInstance
                             - Outputs.HANAMasterInstanceIP
-          HANASecondaryIPAddress: !GetAtt 
+          HANASecondaryIPAddress: !GetAtt
                             - SecondaryInstance
                             - Outputs.HANAMasterInstanceIP
           DomainName: !Ref DomainName
-          MyS3Bucket: !GetAtt 
+          MyS3Bucket: !GetAtt
                             - PreTasks
                             - Outputs.MyS3Bucket
           MyS3BucketPreFix: !Sub ${QSS3KeyPrefix}/scripts
-          HANAPrimaryInstanceRole: !GetAtt 
+          HANAPrimaryInstanceRole: !GetAtt
                             - PrimaryInstance
                             - Outputs.HANAMasterInstanceRole
-          HANASecondaryInstanceRole: !GetAtt 
+          HANASecondaryInstanceRole: !GetAtt
                             - SecondaryInstance
                             - Outputs.HANAMasterInstanceRole
-          HANAPrimarySecurityGroup: !GetAtt 
+          HANAPrimarySecurityGroup: !GetAtt
                             - PrimaryInstance
                             - Outputs.HANAMasterSecurityGroup
-          HANASecondarySecurityGroup: !GetAtt 
+          HANASecondarySecurityGroup: !GetAtt
                             - SecondaryInstance
                             - Outputs.HANAMasterSecurityGroup
         TimeoutInMinutes: '7200'
@@ -578,53 +594,53 @@ Resources:
 Outputs:
   PrimaryIP:
     Description: HANA Primary Node IP Address
-    Value: !GetAtt 
+    Value: !GetAtt
       - PrimaryInstance
       - Outputs.HANAMasterInstanceIP
   SecondaryIP:
     Description: HANA Secondary Node IP Address
-    Value: !GetAtt 
+    Value: !GetAtt
       - SecondaryInstance
       - Outputs.HANAMasterInstanceIP
   SecurityGroupIdPrimary:
     Description: Security Group ID Primary Instance
-    Value: !GetAtt 
+    Value: !GetAtt
       - PrimaryInstance
       - Outputs.HANAMasterSecurityGroup
   SecurityGroupIdSecondary:
     Description: Security Group ID Secondary Instance
-    Value: !GetAtt 
+    Value: !GetAtt
       - SecondaryInstance
       - Outputs.HANAMasterSecurityGroup
   PrimaryIAMRoleName:
     Description: Primary Instance Role Name
-    Value: !GetAtt 
+    Value: !GetAtt
       - PrimaryInstance
       - Outputs.HANAMasterInstanceRole
   SecondaryIAMRoleName:
     Description: Secondary Instance Role Name
-    Value: !GetAtt 
+    Value: !GetAtt
       - SecondaryInstance
       - Outputs.HANAMasterInstanceRole
   PrimaryInstanceId:
     Description: Primary Instance Id
-    Value: !GetAtt 
+    Value: !GetAtt
       - PrimaryInstance
       - Outputs.HANAMasterInstanceId
   SecondaryInstanceId:
     Description: Secondary Instance Id
-    Value: !GetAtt 
+    Value: !GetAtt
       - SecondaryInstance
       - Outputs.HANAMasterInstanceId
   ResultsPreHAConfig:
     Condition: InstallHANAorNot
     Description: Disable DNS Results
-    Value: !GetAtt 
+    Value: !GetAtt
       - PreHAConfig
       - Outputs.ResultsPreHAConfig
   ResultsHAConfig:
     Condition: InstallHANAorNot
     Description: HA Config. Results
-    Value: !GetAtt 
+    Value: !GetAtt
       - HAConfig
       - Outputs.ResultsHAConfig

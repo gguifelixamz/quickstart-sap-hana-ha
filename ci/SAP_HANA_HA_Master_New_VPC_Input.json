@@ -138,5 +138,9 @@
     {
         "ParameterKey": "PaceMakerTag",
         "ParameterValue": "PaceTag"
+    },
+    {
+        "ParameterKey": "DedicatedHostId",
+        "ParameterValue": ""
     }
 ]
