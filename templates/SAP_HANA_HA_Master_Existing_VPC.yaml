@@ -547,6 +547,7 @@ Resources:
           PrimarySubnetId: !Ref PrivateSubnet1ID
           SecondarySubnetId: !Ref PrivateSubnet2ID
           SID: !Ref SID
+          VPCID: !Ref VPCID
           HANAMasterPass: !Ref HANAMasterPass
           SAPInstanceNum: !Ref SAPInstanceNum
           HANAPrimaryIPAddress: !GetAtt 

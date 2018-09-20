@@ -6,20 +6,26 @@ import sys
 
 responseStr = {'Status' : {}}
 
-def getRouteTableID(PrimarySubnetId,SecondarySubnetId,AWSRegion):
+def getRouteTableID(PrimarySubnetId,SecondarySubnetId,vpcId,AWSRegion):
 
     session = boto3.Session()
     ec2 = session.client('ec2', region_name=AWSRegion)
     response = ec2.describe_route_tables(
                     Filters=[{'Name': 'association.subnet-id','Values': [PrimarySubnetId]}]
                 )
+    if len(response['RouteTables']) == 0:
+        response = ec2.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpcId]},{'Name': 'association.main', 'Values': ['true',]}])
 
     PrimaryRouteTableID=response['RouteTables'][0]['Associations'][0]['RouteTableId']
     
     response = ec2.describe_route_tables(
                     Filters=[{'Name': 'association.subnet-id','Values': [SecondarySubnetId]}]
                 )
+    if len(response['RouteTables']) == 0:
+        response = ec2.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpcId]},{'Name': 'association.main', 'Values': ['true',]}])
+        
     SecondaryRouteTableID=response['RouteTables'][0]['Associations'][0]['RouteTableId']
+
     if PrimaryRouteTableID == SecondaryRouteTableID :
             return PrimaryRouteTableID
     else:
@@ -429,6 +435,7 @@ def lambda_handler(input, context):
             domainName = input['ResourceProperties']['domainName']
             HANAPrimarySite = input['ResourceProperties']['PrimaryHANASite']
             HANASecondarySite = input['ResourceProperties']['SecondaryHANASite']
+            VPCID=input['ResourceProperties']['VPCID']
 
             retValue = setupAWSConfigProfile(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
             manageRetValue(retValue,"setupAWSConfigProfile",input, context)
@@ -442,7 +449,7 @@ def lambda_handler(input, context):
             #retValue = addVirtualIPToInstance(HANAPrimaryInstanceID,HANAVirtualIP,AWSRegion)
             #manageRetValue(retValue,"addVirtualIPToInstance",input, context)
             
-            RTabId = getRouteTableID(PrimarySubnetId,SecondarySubnetId,AWSRegion)
+            RTabId = getRouteTableID(PrimarySubnetId,SecondarySubnetId,VPCID,AWSRegion)
             updateRouteTable(HANAPrimaryInstanceID,HANAVirtualIP,RTabId,AWSRegion)
             manageRetValue(retValue,"getRouteTableID",input, context)
 
@@ -503,7 +510,8 @@ def lambda_handler(input, context):
             HANAVirtualIP = input['ResourceProperties']['VirtualIP']
             PrimarySubnetId = input['ResourceProperties']['PrimarySubnetId']
             SecondarySubnetId = input['ResourceProperties']['SecondarySubnetId']
-            RTabId = getRouteTableID(PrimarySubnetId,SecondarySubnetId,AWSRegion)
+            VPCID=input['ResourceProperties']['VPCID']
+            RTabId = getRouteTableID(PrimarySubnetId,SecondarySubnetId,VPCID,AWSRegion)
             deleteVirtualIPRoute(HANAVirtualIP,RTabId,AWSRegion)
             responseStr['Status'] = 'Virtual IP ' + HANAVirtualIP +'Removed From Route Table :' + RTabId
             cfnresponse.send(input, context, cfnresponse.SUCCESS, {'Status':json.dumps(responseStr)})

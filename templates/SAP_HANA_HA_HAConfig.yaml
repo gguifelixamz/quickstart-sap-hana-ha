@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: High Availability Configuration
 Parameters:
+  VPCID:
+     Type: 'AWS::EC2::VPC::Id'
+     Description: VPC ID
   PrimarySubnetId:
      Description : Private Subnet ID of Primary Instance
      Type: 'AWS::EC2::Subnet::Id' 
@@ -101,6 +104,7 @@ Metadata:
           - HANAHostnamePrimary
           - HANAHostnameSecondary
           - PublicSubnet1CIDR
+          - VPCID
       - Label:
           default: HANA Instance Details
         Description:
@@ -120,6 +124,8 @@ Metadata:
           - MyS3BucketPreFix
 
     ParameterLabels:
+      VPCID:
+        default: VPC ID
       PrimarySubnetId:
         default: SubnetID Primary HANA
       SecondarySubnetId:
@@ -383,6 +389,7 @@ Resources:
       PrimarySubnetId: !Ref PrimarySubnetId
       SecondarySubnetId: !Ref SecondarySubnetId
       SID: !Ref SID
+      VPCID: !Ref VPCID
       HANAMasterPass: !Ref HANAMasterPass
       InstanceNo: !Ref SAPInstanceNum
       HANAPrimaryIPAddress: !Ref HANAPrimaryIPAddress

@@ -587,6 +587,9 @@ Resources:
                               - CreateVPC
                               - Outputs.PrivateSubnet2ID
           SID: !Ref SID
+          VPCID: !GetAtt 
+            - CreateVPC
+            - Outputs.VPCID
           HANAMasterPass: !Ref HANAMasterPass
           SAPInstanceNum: !Ref SAPInstanceNum
           HANAPrimaryIPAddress: !GetAtt 
