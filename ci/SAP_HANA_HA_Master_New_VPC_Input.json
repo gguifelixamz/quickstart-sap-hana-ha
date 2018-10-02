@@ -1,7 +1,7 @@
 [
     {
         "ParameterKey": "AvailabilityZones",
-        "ParameterValue": "$[taskcat_getaz_2]"
+        "ParameterValue": "$[alfred_getaz_2]"
     },
     {
         "ParameterKey": "VPCCIDR",
@@ -117,7 +117,7 @@
     },
     {
         "ParameterKey": "HANAMasterPass",
-        "ParameterValue": "$[taskcat_genpass_16]"
+        "ParameterValue": "$[alfred_genpass_16]"
     },
     {
         "ParameterKey": "SAPTZ",
