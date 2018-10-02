@@ -178,6 +178,9 @@ Parameters:
       - x1e.2xlarge
       - x1e.4xlarge
       - x1e.32xlarge
+      - u-6tb1.metal
+      - u-9tb1.metal
+      - u-12tb1.metal
   SID:
     Type: String
     Default: HDB
@@ -225,7 +228,7 @@ Parameters:
     Type: String
     Default: PaceTag
   DedicatedHostId:
-    Description: Existing dedicated host(s) where you want to launch your EC2 instance(s). Use comma to provide multiple hosts.
+    Description: Existing dedicated host(s) where you want to launch your EC2 instance(s). Use comma to provide multiple hosts. Use comma to provide multiple hosts. Mandatory for Amazon EC2 High Memory Instances.
     Type: CommaDelimitedList
     Default: ''
 Metadata:
@@ -250,6 +253,7 @@ Metadata:
           - MyOS
           - SLESBYOSRegCode
           - MyInstanceType
+          - DedicatedHostId
           - KeyName
           - VolumeTypeHanaLog
           - VolumeTypeHanaData
@@ -282,7 +286,6 @@ Metadata:
         Description:
           default: ''
         Parameters:
-          - DedicatedHostId
           - InstallRDPInstance
           - RDPInstanceType
           - RemoteAccessCIDR
@@ -603,7 +606,7 @@ Resources:
                               - CreateVPC
                               - Outputs.PrivateSubnet2ID
           SID: !Ref SID
-          VPCID: !GetAtt 
+          VPCID: !GetAtt
             - CreateVPC
             - Outputs.VPCID
           HANAMasterPass: !Ref HANAMasterPass
