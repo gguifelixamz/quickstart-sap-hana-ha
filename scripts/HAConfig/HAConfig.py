@@ -194,14 +194,14 @@ def disableHANAAutoStartPrimary(HANAPrimaryInstanceID,HANAPrimaryHostname,hanaSI
 
 def updateHostFileSecondary(HANASecondaryInstanceID,HANAPrimaryHostname,HANAPrimaryIPAddress,domainName,AWSRegion):
     CommandArray = []
-    CommandArray.append('echo "'+HANAPrimaryIPAddress+'   '+HANAPrimaryHostname+'   '+HANAPrimaryHostname+'.'+domainName+'" >> /etc/hosts')
+    CommandArray.append('echo "'+HANAPrimaryIPAddress+'   '+HANAPrimaryHostname+'.'+domainName+'   '+HANAPrimaryHostname+'" >> /etc/hosts')
     CommentStr = 'Update Host File on Secondary'
     InstanceIDArray =[HANASecondaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
 
 def updateHostFilePrimary(HANAPrimaryInstanceID,HANASecondaryHostname,HANASecondaryIPAddress,domainName,AWSRegion):
     CommandArray = []
-    CommandArray.append('echo "'+HANASecondaryIPAddress+'   '+HANASecondaryHostname+'   '+HANASecondaryHostname+'.'+domainName+'" >> /etc/hosts')
+    CommandArray.append('echo "'+HANASecondaryIPAddress+'   '+HANASecondaryHostname+'.'+domainName+'   '+HANASecondaryHostname+'" >> /etc/hosts')
     CommentStr = 'Update Host File on Primary'
     InstanceIDArray =[HANAPrimaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
@@ -245,7 +245,6 @@ def CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,han
     CommandArray.append('crm configure load update /root/ClusterSetup/aws-ip-move.txt')
 
     CommandArray.append('echo "property \$id=cib-bootstrap-options \\\\" > /root/ClusterSetup/crm-bs.txt')
-    CommandArray.append('echo "              no-quorum-policy=ignore \\\\" >> /root/ClusterSetup/crm-bs.txt')
     CommandArray.append('echo "              stonith-enabled=true \\\\" >> /root/ClusterSetup/crm-bs.txt')
     CommandArray.append('echo "              stonith-action=poweroff \\\\" >> /root/ClusterSetup/crm-bs.txt')
     CommandArray.append('echo "stonith-timeout=150s" >> /root/ClusterSetup/crm-bs.txt')
@@ -258,8 +257,8 @@ def CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,han
 
     CommandArray.append('echo "primitive rsc_SAPHanaTopology_'+hanaSID.upper()+'_HDB'+hanaInstanceNo+' ocf:suse:SAPHanaTopology \\\\" > /root/ClusterSetup/crm-hana-topology.txt')
     CommandArray.append('echo "operations \$id=rsc_sap2_'+hanaSID.upper()+'_HDB'+hanaInstanceNo+'-operations \\\\" >> /root/ClusterSetup/crm-hana-topology.txt')
-    CommandArray.append('echo "op monitor interval=10 timeout=600 \\\\" >> /root/ClusterSetup/crm-hana-topology.txt')
-    CommandArray.append('echo "op start interval=0 timeout=600 \\\\" >> /root/ClusterSetup/crm-hana-topology.txt')
+    CommandArray.append('echo "op monitor interval=10 timeout=300 \\\\" >> /root/ClusterSetup/crm-hana-topology.txt')
+    CommandArray.append('echo "op start interval=0 timeout=300 \\\\" >> /root/ClusterSetup/crm-hana-topology.txt')
     CommandArray.append('echo "op stop interval=0 timeout=300 \\\\" >> /root/ClusterSetup/crm-hana-topology.txt')
     CommandArray.append('echo "params SID='+hanaSID.upper()+' InstanceNumber='+hanaInstanceNo+'" >> /root/ClusterSetup/crm-hana-topology.txt')
     CommandArray.append('echo "clone cln_SAPHanaTopology_'+hanaSID.upper()+'_HDB'+hanaInstanceNo+' rsc_SAPHanaTopology_'+hanaSID.upper()+'_HDB'+hanaInstanceNo+' \\\\" >> /root/ClusterSetup/crm-hana-topology.txt')
@@ -329,7 +328,7 @@ def createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecon
     CommandArray.append('echo "logging {" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "        fileline: off" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "        to_logfile: yes" >> /etc/corosync/corosync.conf')
-    CommandArray.append('echo "        to_syslog: no" >> /etc/corosync/corosync.conf')
+    CommandArray.append('echo "        to_syslog: yes" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "        logfile: /var/log/cluster/corosync.log" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "        debug: off" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "        timestamp: on" >> /etc/corosync/corosync.conf')
@@ -354,7 +353,7 @@ def createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecon
     CommandArray.append('echo "        # see also corosync.conf.5 and votequorum.5" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "        provider: corosync_votequorum" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "        expected_votes: 2" >> /etc/corosync/corosync.conf')
-    CommandArray.append('echo "        two_nodes: 1" >> /etc/corosync/corosync.conf')
+    CommandArray.append('echo "        two_node: 1" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "}" >> /etc/corosync/corosync.conf')
     CommandArray.append('chown root:root /etc/corosync/corosync.conf')
     CommandArray.append('chmod 400 /etc/corosync/corosync.conf')
