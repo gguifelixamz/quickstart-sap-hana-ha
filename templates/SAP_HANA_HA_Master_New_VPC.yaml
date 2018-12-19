@@ -172,6 +172,10 @@ Parameters:
       - r4.8xlarge
       - r4.4xlarge
       - r4.2xlarge
+      - r5.2xlarge
+      - r5.4xlarge
+      - r5.12xlarge
+      - r5.24xlarge
       - x1.16xlarge
       - x1.32xlarge
       - x1e.xlarge
