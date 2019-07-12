@@ -81,12 +81,14 @@ def lambda_handler(input, context):
             hanaSID = input['ResourceProperties']['SID']
             hanaInstanceNo = input['ResourceProperties']['InstanceNo']
             HANAMasterPass = input['ResourceProperties']['HANAMasterPass']
+            MyOS = input['ResourceProperties']['MyOS']
 
-            retValue = updateNetworkConfig(HANAPrimaryInstanceID,HANAPrimaryIPAddress,AWSRegion)
-            manageRetValue(retValue,"updateNetworkConfigPrimary",input, context)
+            if 'SUSE' in MyOS.upper():
+                retValue = updateNetworkConfig(HANAPrimaryInstanceID,HANAPrimaryIPAddress,AWSRegion)
+                manageRetValue(retValue,"updateNetworkConfigPrimary",input, context)
 
-            retValue = updateNetworkConfig(HANASecondaryInstanceID,HANASecondaryIPAddress,AWSRegion)
-            manageRetValue(retValue,"updateNetworkConfigSecondary",input, context)
+                retValue = updateNetworkConfig(HANASecondaryInstanceID,HANASecondaryIPAddress,AWSRegion)
+                manageRetValue(retValue,"updateNetworkConfigSecondary",input, context)
 
             retValue = backupHANAonPrimary(HANAPrimaryInstanceID,hanaSID,hanaInstanceNo,HANAMasterPass,AWSRegion)
             manageRetValue(retValue,"backupHANAonPrimary",input, context)

@@ -88,14 +88,6 @@ def setupAWSConfigProfile(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegio
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
 
 
-def addVirtualIPToInstance(HANAPrimaryInstanceID,HANAVirtualIP,AWSRegion):
-    CommandArray = []
-    CommandArray.append('ip address add '+HANAVirtualIP+' dev eth0:1')
-    CommentStr = 'Add virtual IP to Primary'
-    InstanceIDArray =[HANAPrimaryInstanceID]
-    return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
-
-
 def disableSourceDestinationCheck(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion):
     session = boto3.Session()
     ec2 = session.client('ec2', region_name=AWSRegion)
@@ -141,17 +133,11 @@ def verifyPackemakerTag(HANAPrimaryInstanceID,HANASecondaryInstanceID,PaceMakerT
 
 def installRsyslog(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion):
     CommandArray = []
+    # SLES12 SP4 & SLES 15 do not have aws-vpc-move-ip installed by default
+    CommandArray.append('zypper install -y aws-vpc-move-ip')
     CommandArray.append('zypper install -y -l rsyslog -syslogd')
     CommentStr = 'Install rsyslog'
     InstanceIDArray =[HANAPrimaryInstanceID,HANASecondaryInstanceID]
-    return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
-
-def backupHANAonPrimary(HANAPrimaryInstanceID,hanaSID,hanaInstanceNo,HANAMasterPass,AWSRegion):
-    CommandArray = []
-    CommandArray.append('su - '+hanaSID.lower()+'adm -c "hdbsql -u system -i '+hanaInstanceNo+' -d SystemDB -p '+HANAMasterPass+' \\"BACKUP DATA FOR SystemDB  USING FILE (\'backupSystem\')\\""')    
-    CommandArray.append('su - '+hanaSID.lower()+'adm -c "hdbsql -u system -i '+hanaInstanceNo+' -d SystemDB -p '+HANAMasterPass+' \\"BACKUP DATA FOR '+hanaSID+' USING FILE (\'backup'+hanaSID+'\')\\""')
-    CommentStr = 'Backup Database on Primary'
-    InstanceIDArray =[HANAPrimaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
 
 
@@ -237,7 +223,8 @@ def CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,han
     CommandArray.append('crm configure load update /root/ClusterSetup/aws-stonith.txt')
 
     CommandArray.append('echo "primitive res_AWS_IP ocf:suse:aws-vpc-move-ip \\\\" > /root/ClusterSetup/aws-ip-move.txt')
-    CommandArray.append('echo "params address='+HANAVirtualIP+' routing_table='+RTabId+' interface=eth0 profile=cluster \\\\" >> /root/ClusterSetup/aws-ip-move.txt')
+    #changed address to ip as address has been deprecated in lastest version (also added zypper install aws-vpc-move-ip so that latest version of agents is installed)
+    CommandArray.append('echo "params ip='+HANAVirtualIP+' routing_table='+RTabId+' interface=eth0 profile=cluster \\\\" >> /root/ClusterSetup/aws-ip-move.txt')
     CommandArray.append('echo "op start interval=0 timeout=180 \\\\" >> /root/ClusterSetup/aws-ip-move.txt')
     CommandArray.append('echo "op stop interval=0 timeout=180 \\\\" >> /root/ClusterSetup/aws-ip-move.txt')
     CommandArray.append('echo "op monitor interval=60 timeout=60 \\\\" >> /root/ClusterSetup/aws-ip-move.txt')
@@ -246,7 +233,8 @@ def CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,han
 
     CommandArray.append('echo "property \$id=cib-bootstrap-options \\\\" > /root/ClusterSetup/crm-bs.txt')
     CommandArray.append('echo "              stonith-enabled=true \\\\" >> /root/ClusterSetup/crm-bs.txt')
-    CommandArray.append('echo "              stonith-action=poweroff \\\\" >> /root/ClusterSetup/crm-bs.txt')
+    #Changed poweroff to off as poweroff has been deprecated
+    CommandArray.append('echo "              stonith-action=off \\\\" >> /root/ClusterSetup/crm-bs.txt')
     CommandArray.append('echo "stonith-timeout=150s" >> /root/ClusterSetup/crm-bs.txt')
     CommandArray.append('echo "rsc_defaults \$id=rsc-options \\\\" >> /root/ClusterSetup/crm-bs.txt')
     CommandArray.append('echo "resource-stickiness=1000 \\\\" >> /root/ClusterSetup/crm-bs.txt')
@@ -290,11 +278,11 @@ def CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,han
 
 def StartPaceMaker(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAMasterPass,AWSRegion):
     CommandArray=[]
-    CommandArray.append('echo "hacluster:'+HANAMasterPass+'" | chpasswd')
     CommandArray.append('systemctl start pacemaker')
     CommandArray.append('chkconfig pacemaker on')
     CommandArray.append('systemctl start hawk')
     CommandArray.append('chkconfig hawk on')
+    CommandArray.append('echo "hacluster:'+HANAMasterPass+'" | chpasswd')
     CommentStr = 'Start Pacemaker on Primary and configure for autostart with OS'
     InstanceIDArray =[HANAPrimaryInstanceID]
     if ( executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion) == 1 ):
@@ -410,11 +398,44 @@ def manageRetValue(retValue,FuncName,input, context):
         cfnresponse.send(input, context, cfnresponse.FAILED, {'Status':json.dumps(responseStr)})
         sys.exit(0)
 
+def RHELStartPCSService(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAMasterPass,AWSRegion):
+    CommandArray = []
+    CommandArray.append('[ ! -e /usr/bin/aws ] && ln -s /usr/local/bin/aws /usr/bin/aws')
+    CommandArray.append('yum install -y pcs pacemaker fence-agents-aws aws-vpc-move-ip')
+    CommandArray.append('yum install -y resource-agents-sap-hana resource-agents')
+    CommandArray.append('mkdir -p /var/log/pcsd')
+    CommandArray.append('mkdir -p /var/log/cluster')
+    CommandArray.append('mkdir -p /var/log/sa')
+    CommandArray.append('systemctl start pcsd.service')
+    CommandArray.append('systemctl enable pcsd.service')
+    CommandArray.append('echo "hacluster:'+HANAMasterPass+'" | chpasswd')
+    InstanceIDArray =[HANAPrimaryInstanceID,HANASecondaryInstanceID]
+    CommentStr = 'Setup user hacluster and PCSD Service'
+    return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
+
+def RHELSetupHANACluster(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAPrimaryHostname,HANASecondaryHostname,HANAMasterPass,AWSRegion,hanaSID,hanaInstanceNo,HANAVirtualIP,RTabId):
+    CommandArray = []
+    CommandArray.append('pcs cluster auth '+HANAPrimaryHostname+' '+HANASecondaryHostname+' -u hacluster -p '+HANAMasterPass)
+    CommandArray.append('pcs cluster setup --name hanacluster  '+HANAPrimaryHostname+' '+HANASecondaryHostname)
+    CommandArray.append('pcs cluster enable --all')
+    CommandArray.append('pcs cluster start --all')
+    CommandArray.append('pcs stonith create clusterfence fence_aws region='+AWSRegion+' pcmk_host_map="'+HANAPrimaryHostname+':'+HANAPrimaryInstanceID+';'+HANASecondaryHostname+':'+HANASecondaryInstanceID+'" power_timeout=240 pcmk_reboot_timeout=480 pcmk_reboot_retries=4')
+    #Removed resource-stickiness & migration-threshold based on recommendations from Red Hat
+    #CommandArray.append('pcs resource defaults resource-stickiness=1000')
+    #CommandArray.append('pcs resource defaults migration-threshold=5000')
+    CommandArray.append('pcs resource create SAPHanaTopology_'+hanaSID+'_'+hanaInstanceNo+' SAPHanaTopology SID='+hanaSID+' InstanceNumber='+hanaInstanceNo+' --clone clone-max=2 clone-node-max=1 interleave=true')
+    CommandArray.append('pcs resource create SAPHana_'+hanaSID+'_'+hanaInstanceNo+' SAPHana SID='+hanaSID+' InstanceNumber='+hanaInstanceNo+' PREFER_SITE_TAKEOVER=true DUPLICATE_PRIMARY_TIMEOUT=7200 AUTOMATED_REGISTER=true master meta notify=true clone-max=2 clone-node-max=1 interleave=true')
+    CommandArray.append('pcs resource create SAPHana_'+hanaSID+'_OIP aws-vpc-move-ip ip='+HANAVirtualIP+' interface=eth0 routing_table='+RTabId)
+    CommandArray.append('pcs constraint order SAPHanaTopology_'+hanaSID+'_'+hanaInstanceNo+'-clone then SAPHana_'+hanaSID+'_'+hanaInstanceNo+'-master symmetrical=false')
+    CommandArray.append('pcs constraint colocation add SAPHana_'+hanaSID+'_OIP with master SAPHana_'+hanaSID+'_'+hanaInstanceNo+'-master 2000')
+    InstanceIDArray =[HANAPrimaryInstanceID]
+    CommentStr = 'Setup HANA Cluster Config'
+    return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
+
 
 def lambda_handler(input, context):
     global responseStr
     try:
-        print(json.dumps(input))
         if (input['RequestType'] == "Update") or (input['RequestType'] == "Create"):
             HANAPrimaryInstanceID = input['ResourceProperties']['PrimaryInstanceId']
             HANASecondaryInstanceID = input['ResourceProperties']['SecondaryInstanceId']
@@ -435,6 +456,8 @@ def lambda_handler(input, context):
             HANAPrimarySite = input['ResourceProperties']['PrimaryHANASite']
             HANASecondarySite = input['ResourceProperties']['SecondaryHANASite']
             VPCID=input['ResourceProperties']['VPCID']
+            MyOS = input['ResourceProperties']['MyOS']
+            MyOS = MyOS.upper()
 
             retValue = setupAWSConfigProfile(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
             manageRetValue(retValue,"setupAWSConfigProfile",input, context)
@@ -444,19 +467,14 @@ def lambda_handler(input, context):
 
             retValue = disableSourceDestinationCheck(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
             manageRetValue(retValue,"disableSourceDestinationCheck",input, context)
-
-            #retValue = addVirtualIPToInstance(HANAPrimaryInstanceID,HANAVirtualIP,AWSRegion)
-            #manageRetValue(retValue,"addVirtualIPToInstance",input, context)
             
             RTabId = getRouteTableID(PrimarySubnetId,SecondarySubnetId,VPCID,AWSRegion)
             updateRouteTable(HANAPrimaryInstanceID,HANAVirtualIP,RTabId,AWSRegion)
             manageRetValue(retValue,"getRouteTableID",input, context)
 
-            retValue = installRsyslog(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
-            responseStr["Status"]["installRsyslog"] = "Success"
-
-            #retValue = backupHANAonPrimary(HANAPrimaryInstanceID,hanaSID,hanaInstanceNo,HANAMasterPass,AWSRegion)
-            #manageRetValue(retValue,"backupHANAonPrimary",input, context)
+            if 'SUSE' in MyOS :
+                 retValue = installRsyslog(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
+                 responseStr["Status"]["installRsyslog"] = "Success"
 
             retValue = copySSFSFilesFromPrimaryToS3(HANAPrimaryInstanceID,TempS3Bucket,hanaSID,AWSRegion)
             manageRetValue(retValue,"copySSFSFilesFromPrimaryToS3",input, context)
@@ -478,9 +496,10 @@ def lambda_handler(input, context):
 
             retValue = updatePreserveHostName(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
             manageRetValue(retValue,"updatePreserveHostName",input, context)
-
-            retValue = updateDefaultTasksMax(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
-            manageRetValue(retValue,"updateDefaultTasksMax",input, context)
+            
+            if 'SUSE' in MyOS :
+                retValue = updateDefaultTasksMax(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
+                manageRetValue(retValue,"updateDefaultTasksMax",input, context)
 
             retValue = setupHSRPrimary(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAPrimarySite,HANASecondarySite,HANAPrimaryHostname,hanaSID,hanaInstanceNo,AWSRegion)
             manageRetValue(retValue,"setupHSRPrimary",input, context)
@@ -488,20 +507,27 @@ def lambda_handler(input, context):
             retValue = setupHSRSecondary(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAPrimarySite,HANASecondarySite,HANAPrimaryHostname,hanaSID,hanaInstanceNo,AWSRegion)
             manageRetValue(retValue,"setupHSRSecondary",input, context)
 
-            retValue = setupCoroSyncKeyPrimary(HANAPrimaryInstanceID,HANASecondaryInstanceID,TempS3Bucket,AWSRegion)
-            manageRetValue(retValue,"setupCoroSyncKeyPrimary",input, context)
+            if 'SUSE' in MyOS :
+                retValue = setupCoroSyncKeyPrimary(HANAPrimaryInstanceID,HANASecondaryInstanceID,TempS3Bucket,AWSRegion)
+                manageRetValue(retValue,"setupCoroSyncKeyPrimary",input, context)
 
-            retValue = copyCoroSyncKeyToSecondary(HANAPrimaryInstanceID,HANASecondaryInstanceID,TempS3Bucket,AWSRegion)
-            manageRetValue(retValue,"copyCoroSyncKeyToSecondary",input, context)
+                retValue = copyCoroSyncKeyToSecondary(HANAPrimaryInstanceID,HANASecondaryInstanceID,TempS3Bucket,AWSRegion)
+                manageRetValue(retValue,"copyCoroSyncKeyToSecondary",input, context)
 
-            retValue = createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecondaryIPAddress,HANAPrimaryIPAddress,AWSRegion)
-            manageRetValue(retValue,"createCoroSyncConfig",input, context)
+                retValue = createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecondaryIPAddress,HANAPrimaryIPAddress,AWSRegion)
+                manageRetValue(retValue,"createCoroSyncConfig",input, context)
 
-            retValue = StartPaceMaker(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAMasterPass,AWSRegion)
-            manageRetValue(retValue,"StartPaceMaker",input, context)
+                retValue = StartPaceMaker(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAMasterPass,AWSRegion)
+                manageRetValue(retValue,"StartPaceMaker",input, context)
 
-            retValue = CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,hanaInstanceNo,PaceMakerTag,AWSRegion)
-            manageRetValue(retValue,"CompleteCoroSyncSetup",input, context)
+                retValue = CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,hanaInstanceNo,PaceMakerTag,AWSRegion)
+                manageRetValue(retValue,"CompleteCoroSyncSetup",input, context)
+            else:
+                retValue = RHELStartPCSService(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAMasterPass,AWSRegion)
+                manageRetValue(retValue,"CompletePCSDServiceRHEL",input, context)
+
+                retValue = RHELSetupHANACluster(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAPrimaryHostname,HANASecondaryHostname,HANAMasterPass,AWSRegion,hanaSID,hanaInstanceNo,HANAVirtualIP,RTabId)
+                manageRetValue(retValue,"HANAClusterConfigRHEL",input, context)
 
             cfnresponse.send(input, context, cfnresponse.SUCCESS, {'Status':json.dumps(responseStr)})
         elif (input['RequestType'] == "Delete"):

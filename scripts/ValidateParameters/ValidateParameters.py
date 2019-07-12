@@ -55,7 +55,6 @@ def get_vpc_CIDR(vpcId):
     return retValue['Vpcs'][0]['CidrBlock']
 
 def handler(input, context):
-    print('Received event: %s' % json.dumps(input))
     status = cfnresponse.SUCCESS
     try:
         subnet1 = input['ResourceProperties']['PrimarySubnetId']

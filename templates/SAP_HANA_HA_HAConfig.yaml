@@ -86,7 +86,10 @@ Parameters:
     Description: SAP HANA instance number.
     AllowedPattern: '([0-8]{1}[0-9]{1}|[9]{1}[0-7]{1})'
     ConstraintDescription: Instance number must be between 00 and 97.
-
+  MyOS:
+     Description : Operating System for HANA instances
+     Type: String
+     
 Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
@@ -105,6 +108,7 @@ Metadata:
           - HANAHostnameSecondary
           - PublicSubnet1CIDR
           - VPCID
+          - MyOS
       - Label:
           default: HANA Instance Details
         Description:
@@ -170,6 +174,8 @@ Metadata:
         default: Overlay IP Address
       PaceMakerTag:
         default: Pacemaker Tag Name
+      MyOS:
+        default: Operating system for HANA instances
 
 Resources:
   UpdateInstanceIAMRoles:
@@ -396,6 +402,7 @@ Resources:
       HANASecondaryIPAddress: !Ref HANASecondaryIPAddress
       domainName: !Ref DomainName
       TempS3Bucket: !Join [ '',[ 's3://',!Ref MyS3Bucket,'/',!Ref MyS3BucketPreFix,'/']]
+      MyOS : !Ref MyOS
 
 Outputs:
   ResultsHAConfig:

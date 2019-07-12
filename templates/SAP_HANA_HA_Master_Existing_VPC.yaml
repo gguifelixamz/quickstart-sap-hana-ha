@@ -123,14 +123,21 @@ Parameters:
   MyOS:
     Type: String
     Description: Operating system (SLES for SAP) and version for master nodes.
-    Default: SuSELinux12SP3ForSAP
+    Default: SuSELinux12SP4ForSAP
     AllowedValues:
       - SuSELinux12SP1ForSAP
       - SuSELinux12SP2ForSAP
       - SuSELinux12SP3ForSAP
+      - SuSELinux12SP4ForSAP
+      - SuSELinux15ForSAP
       - SuSELinux12SP1ForSAP-BYOS
       - SuSELinux12SP2ForSAP-BYOS
       - SuSELinux12SP3ForSAP-BYOS
+      - SuSELinux12SP4ForSAP-BYOS
+      - SuSELinux15ForSAP-BYOS
+      - RedHatLinux74ForSAP-With-HA-US
+      - RedHatLinux75ForSAP-With-HA-US
+      - RedHatLinux76ForSAP-With-HA-US
   SLESBYOSRegCode:
     Type: String
     Default: ''
@@ -394,7 +401,6 @@ Conditions:
   InstallHANAorNot: !Equals [ !Ref InstallHANA, 'Yes' ]
   IfDedicatedHost: !Not [!Equals [!Select [0, !Ref DedicatedHostId], '']]
 
-
 Resources:
 
   PreTasks:
@@ -544,6 +550,7 @@ Resources:
           HANASecondarySecurityGroup: !GetAtt
                             - SecondaryInstance
                             - Outputs.HANAMasterSecurityGroup
+          MyOS: !Ref MyOS
       TimeoutInMinutes: '7200'
 
   HAConfig:
@@ -596,6 +603,7 @@ Resources:
           HANASecondarySecurityGroup: !GetAtt
                             - SecondaryInstance
                             - Outputs.HANAMasterSecurityGroup
+          MyOS: !Ref MyOS
         TimeoutInMinutes: '7200'
 
 Outputs:

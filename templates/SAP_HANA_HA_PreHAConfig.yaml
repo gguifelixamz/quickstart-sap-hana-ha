@@ -52,6 +52,9 @@ Parameters:
   HANASecondarySecurityGroup:
      Description : Security Group ID for HANA Secondary Instance
      Type: String
+  MyOS:
+     Description : Operating System for HANA instances
+     Type: String
 
 Metadata:
   'AWS::CloudFormation::Interface':
@@ -72,6 +75,7 @@ Metadata:
           - HANAPrimarySecurityGroup
           - HANASecondarySecurityGroup
           - SID
+          - MyOS
       - Label:
           default: S3 Bucket
         Description:
@@ -107,6 +111,8 @@ Metadata:
         default: Primary HANA Security GroupId
       HANASecondarySecurityGroup:
         default: Secondary HANA Security GroupId
+      MyOS:
+        default: Operating system for HANA instances
 
 Resources:
 
@@ -177,6 +183,7 @@ Resources:
       SID: !Ref SID
       InstanceNo: !Ref SAPInstanceNum
       HANAMasterPass : !Ref HANAMasterPass
+      MyOS : !Ref MyOS
 
 Outputs:
   ResultsPreHAConfig:
