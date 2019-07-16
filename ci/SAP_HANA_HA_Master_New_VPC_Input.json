@@ -142,5 +142,13 @@
     {
         "ParameterKey": "DedicatedHostId",
         "ParameterValue": ""
+    },
+        {
+        "ParameterKey": "QSS3BucketName",
+        "ParameterValue": "harp-ha"
+    },
+    {
+        "ParameterKey": "QSS3KeyPrefix",
+        "ParameterValue": "quickstart-sap-hana-ha"
     }
 ]
