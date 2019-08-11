@@ -123,7 +123,6 @@ Parameters:
     Description: Operating system (SLES for SAP) and version for master nodes.
     Default: SuSELinux12SP4ForSAP
     AllowedValues:
-      - SuSELinux12SP1ForSAP
       - SuSELinux12SP2ForSAP
       - SuSELinux12SP3ForSAP
       - SuSELinux12SP4ForSAP
