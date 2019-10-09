@@ -169,7 +169,7 @@ Parameters:
   MyInstanceType:
     Type: String
     Description: Instance type for SAP HANA host.
-    Default: r4.2xlarge
+    Default: r5.2xlarge
     AllowedValues:
       - r3.8xlarge
       - r3.4xlarge
@@ -191,6 +191,8 @@ Parameters:
       - u-6tb1.metal
       - u-9tb1.metal
       - u-12tb1.metal
+      - u-18tb1.metal
+      - u-24tb1.metal
   SID:
     Type: String
     Default: HDB
