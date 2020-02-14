@@ -3,14 +3,19 @@ import json
 import boto3
 import time
 import sys
+import jmespath
 
-responseStr = {'Status' : {}}
+# responseStr = {'Status' : {}}
+responseStr = {}
 
 
-def updateNetworkConfig(HANAInstanceID,HANAIPAddress,AWSRegion):
+def updateNetworkConfig(HANAInstanceID,HANAIPAddress,HANAIP2Address,AWSRegion):
     CommandArray = []
     CommandArray.append('sed -i".bak" "/CLOUD_NETCONFIG_MANAGE/d" /etc/sysconfig/network/ifcfg-eth0')
     CommandArray.append('echo -e "CLOUD_NETCONFIG_MANAGE=\'no\'">> /etc/sysconfig/network/ifcfg-eth0')
+    CommandArray.append('echo -e "IPADDR_1=\''+HANAIP2Address+'\'" >> /etc/sysconfig/network/ifcfg-eth0')
+    CommandArray.append('echo -e "LABEL_1=\'1\'" >> /etc/sysconfig/network/ifcfg-eth0')
+    CommandArray.append('ifup eth0')
     CommandArray.append('service network restart')
     CommandArray.append('service amazon-ssm-agent stop')
     CommandArray.append('service amazon-ssm-agent start')    
@@ -62,12 +67,30 @@ def executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion):
 def manageRetValue(retValue,FuncName,input, context):
     global responseStr
     if (retValue == 1):
-        responseStr['Status'][FuncName] = "Success"
+        # responseStr['Status'][FuncName] = "Success"
+        responseStr[FuncName] = "Success"
+
     else:
-        responseStr['Status'][FuncName] = "Failed"
+        # responseStr['Status'][FuncName] = "Failed"
+        responseStr[FuncName] = "Failed"
         cfnresponse.send(input, context, cfnresponse.FAILED, {'Status':json.dumps(responseStr)})
         sys.exit(0)
 
+def getNetworkInterfaceId(EC2InstanceId):
+    session = boto3.Session()
+    ec2Client = session.client('ec2')
+    response = ec2Client.describe_instances(InstanceIds=[EC2InstanceId])
+    ENIId = jmespath.search("Reservations[].Instances[].NetworkInterfaces[].NetworkInterfaceId", response)
+    ENIId_str = ''.join(ENIId)
+    return ENIId_str
+    
+def setSecondaryInterfaceIP(EC2InstanceENIId):
+    session = boto3.Session()
+    ec2Client = session.client('ec2')
+    response = ec2Client.assign_private_ip_addresses(NetworkInterfaceId=EC2InstanceENIId,SecondaryPrivateIpAddressCount=1)
+    assignedIPv4 = jmespath.search("AssignedPrivateIpAddresses[].PrivateIpAddress", response)
+    assignedIPv4_str = ''.join(assignedIPv4)
+    return assignedIPv4_str
 
 def lambda_handler(input, context):
     global responseStr
@@ -84,19 +107,30 @@ def lambda_handler(input, context):
             MyOS = input['ResourceProperties']['MyOS']
 
             if 'SUSE' in MyOS.upper():
-                retValue = updateNetworkConfig(HANAPrimaryInstanceID,HANAPrimaryIPAddress,AWSRegion)
+                # Retrieve ENI IDs from both HANA instances
+                HANAPrimaryENIID = getNetworkInterfaceId(HANAPrimaryInstanceID)
+                HANASecondaryENIID = getNetworkInterfaceId(HANASecondaryInstanceID)
+            
+                # Assign a Second IP to both HANA instances
+                HANAPrimarySecondIP = setSecondaryInterfaceIP(HANAPrimaryENIID)
+                responseStr['HANAPrimarySecondIP'] = HANAPrimarySecondIP
+                HANASecondarySecondIP = setSecondaryInterfaceIP(HANASecondaryENIID)
+                responseStr['HANASecondarySecondIP'] = HANASecondarySecondIP
+                    
+                retValue = updateNetworkConfig(HANAPrimaryInstanceID,HANAPrimaryIPAddress,HANAPrimarySecondIP,AWSRegion)
                 manageRetValue(retValue,"updateNetworkConfigPrimary",input, context)
 
-                retValue = updateNetworkConfig(HANASecondaryInstanceID,HANASecondaryIPAddress,AWSRegion)
+                retValue = updateNetworkConfig(HANASecondaryInstanceID,HANASecondaryIPAddress,HANASecondarySecondIP,AWSRegion)
                 manageRetValue(retValue,"updateNetworkConfigSecondary",input, context)
 
             retValue = backupHANAonPrimary(HANAPrimaryInstanceID,hanaSID,hanaInstanceNo,HANAMasterPass,AWSRegion)
             manageRetValue(retValue,"backupHANAonPrimary",input, context)
 
-            cfnresponse.send(input, context, cfnresponse.SUCCESS, {'Status':json.dumps(responseStr)})
+#            cfnresponse.send(input, context, cfnresponse.SUCCESS, {'Status':json.dumps(responseStr)})
+            cfnresponse.send(input, context, cfnresponse.SUCCESS, responseStr)
         else:
             responseStr['Status'] = 'Nothing to do as Request Type is : ' + input['RequestType']
-            cfnresponse.send(input, context, cfnresponse.SUCCESS, {'Status':json.dumps(responseStr)})
+            cfnresponse.send(input, context, cfnresponse.SUCCESS, responseStr)
     except Exception as e:
         responseStr['Status'] = str(e)
-        cfnresponse.send(input, context, cfnresponse.FAILED, {'Status':json.dumps(responseStr)})
+        cfnresponse.send(input, context, cfnresponse.FAILED, responseStr)
