@@ -648,6 +648,12 @@ Resources:
                             - SecondaryInstance
                             - Outputs.HANAMasterSecurityGroup
           MyOS: !Ref MyOS
+          HANAPrimaryNewIPAddr: !GetAtt
+                            - PreHAConfig
+                            - Outputs.HANAPrimaryNewIP
+          HANASecondaryNewIPAddr: !GetAtt
+                            - PreHAConfig
+                            - Outputs.HANASecondaryNewIP
         TimeoutInMinutes: '7200'
 
 Outputs:
@@ -691,12 +697,36 @@ Outputs:
     Value: !GetAtt
       - SecondaryInstance
       - Outputs.HANAMasterInstanceId
-  ResultsPreHAConfig:
+  PreHAUpdateNetworkConfigPrimary:
     Condition: InstallHANAorNot
     Description: Disable DNS Results
     Value: !GetAtt
       - PreHAConfig
-      - Outputs.ResultsPreHAConfig
+      - Outputs.UpdateNetworkConfigPrimary
+  PreHAUpdateNetworkConfigSecondary:
+    Condition: InstallHANAorNot
+    Description: Disable DNS Results
+    Value: !GetAtt
+      - PreHAConfig
+      - Outputs.UpdateNetworkConfigSecondary
+  PreHABackupHanaOnPrimary:
+    Condition: InstallHANAorNot
+    Description: Disable DNS Results
+    Value: !GetAtt
+      - PreHAConfig
+      - Outputs.BackupHanaOnPrimary
+  PreHAHANAPrimaryNewIP:
+    Condition: InstallHANAorNot
+    Description: Disable DNS Results
+    Value: !GetAtt
+      - PreHAConfig
+      - Outputs.HANAPrimaryNewIP
+  PreHAHANASecondaryNewIP:
+    Condition: InstallHANAorNot
+    Description: Disable DNS Results
+    Value: !GetAtt
+      - PreHAConfig
+      - Outputs.HANASecondaryNewIP      
   ResultsHAConfig:
     Condition: InstallHANAorNot
     Description: HA Config. Results
