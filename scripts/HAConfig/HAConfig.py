@@ -293,7 +293,7 @@ def StartPaceMaker(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAMasterPass,
         return 0
 
 
-def createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecondaryIPAddress,HANAPrimaryIPAddress,HANAPrimaryNewIPAddr,HANASecondaryNewIPAddr,AWSRegion):
+def createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecondaryIPAddress,HANAPrimaryIPAddress,HANAPrimaryCorosync2ndIP,HANASecondaryCorosync2ndIP,AWSRegion):
     CommandArray = []
     CommandArray.append('echo "# Please read the corosync.conf.5 manual page" > /etc/corosync/corosync.conf')
     CommandArray.append('echo "totem {" >> /etc/corosync/corosync.conf')
@@ -329,12 +329,12 @@ def createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecon
     CommandArray.append('echo "nodelist {" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "        node {" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "                ring0_addr: '+HANAPrimaryIPAddress+'" >> /etc/corosync/corosync.conf')
-    CommandArray.append('echo "                ring1_addr: '+HANAPrimaryNewIPAddr+'" >> /etc/corosync/corosync.conf')
+    CommandArray.append('echo "                ring1_addr: '+HANAPrimaryCorosync2ndIP+'" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "                nodeid: 1" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "        }" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "        node {" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "                ring0_addr: '+HANASecondaryIPAddress+'" >> /etc/corosync/corosync.conf')
-    CommandArray.append('echo "                ring1_addr: '+HANASecondaryNewIPAddr+'" >> /etc/corosync/corosync.conf')
+    CommandArray.append('echo "                ring1_addr: '+HANASecondaryCorosync2ndIP+'" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "                nodeid: 2" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "        }" >> /etc/corosync/corosync.conf')
     CommandArray.append('echo "}" >> /etc/corosync/corosync.conf')
@@ -477,8 +477,8 @@ def lambda_handler(input, context):
             VPCID=input['ResourceProperties']['VPCID']
             MyOS = input['ResourceProperties']['MyOS']
             MyOS = MyOS.upper()
-            HANAPrimaryNewIPAddr = input['ResourceProperties']['HANAPrimaryNewIPAddr']
-            HANASecondaryNewIPAddr = input['ResourceProperties']['HANASecondaryNewIPAddr']
+            HANAPrimaryCorosync2ndIP = input['ResourceProperties']['HANAPrimaryCorosync2ndIP']
+            HANASecondaryCorosync2ndIP = input['ResourceProperties']['HANASecondaryCorosync2ndIP']
 
             retValue = setupAWSConfigProfile(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
             manageRetValue(retValue,"setupAWSConfigProfile",input, context)
@@ -535,7 +535,7 @@ def lambda_handler(input, context):
                 retValue = copyCoroSyncKeyToSecondary(HANAPrimaryInstanceID,HANASecondaryInstanceID,TempS3Bucket,AWSRegion)
                 manageRetValue(retValue,"copyCoroSyncKeyToSecondary",input, context)
 
-                retValue = createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecondaryIPAddress,HANAPrimaryIPAddress,HANAPrimaryNewIPAddr,HANASecondaryNewIPAddr,AWSRegion)
+                retValue = createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecondaryIPAddress,HANAPrimaryIPAddress,HANAPrimaryCorosync2ndIP,HANASecondaryCorosync2ndIP,AWSRegion)
                 manageRetValue(retValue,"createCoroSyncConfig",input, context)
                 
                 retValue = setupSUSESAPHanaHook(HANAPrimaryInstanceID,HANASecondaryInstanceID,hanaSID,AWSRegion)

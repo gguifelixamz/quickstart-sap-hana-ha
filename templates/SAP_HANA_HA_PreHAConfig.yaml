@@ -203,12 +203,12 @@ Outputs:
     Value: !GetAtt 
       - InvokePreHAConfigLambdaFunction
       - backupHANAonPrimary  
-  HANAPrimaryNewIP:
+  HANAPrimaryCorosync2ndIP:
     Description: Pre HANA HA Config Results
     Value: !GetAtt
       - InvokePreHAConfigLambdaFunction
       - HANAPrimarySecondIP
-  HANASecondaryNewIP:
+  HANASecondaryCorosync2ndIP:
     Description: Pre HANA HA Config Results
     Value: !GetAtt
       - InvokePreHAConfigLambdaFunction

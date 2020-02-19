@@ -89,11 +89,11 @@ Parameters:
   MyOS:
      Description : Operating System for HANA instances
      Type: String
-  HANAPrimaryNewIPAddr:
-     Description: Second IP Address for Corosync Redundant Ring
+  HANAPrimaryCorosync2ndIP:
+     Description: Primary HANA Instance Second IP Address for Corosync Redundant Ring
      Type: String
-  HANASecondaryNewIPAddr:
-     Description: Second IP Address for Corosync Redundant Ring
+  HANASecondaryCorosync2ndIP:
+     Description: Secondary HANA Instance Second IP Address for Corosync Redundant Ring
      Type: String
      
 Metadata:
@@ -115,8 +115,8 @@ Metadata:
           - PublicSubnet1CIDR
           - VPCID
           - MyOS
-          - HANAPrimaryNewIPAddr
-          - HANASecondaryNewIPAddr
+          - HANAPrimaryCorosync2ndIP
+          - HANASecondaryCorosync2ndIP
       - Label:
           default: HANA Instance Details
         Description:
@@ -184,10 +184,10 @@ Metadata:
         default: Pacemaker Tag Name
       MyOS:
         default: Operating system for HANA instances
-      HANAPrimaryNewIPAddr:
-        default: Second IP Address for Corosync Redundant Ring
-      HANASecondaryNewIPAddr:
-        default: Second IP Address for Corosync Redundant Ring
+      HANAPrimaryCorosync2ndIP:
+        default: Primary HANA Instance Second IP Address for Corosync Redundant Ring
+      HANASecondaryCorosync2ndIP:
+        default: Secondary HANA Instance Second IP Address for Corosync Redundant Ring
 
 Resources:
   UpdateInstanceIAMRoles:
@@ -245,7 +245,7 @@ Resources:
         ToPort: '5405'
         CidrIp: !Join 
           - ''
-          - - !Ref HANASecondaryNewIPAddr
+          - - !Ref HANASecondaryCorosync2ndIP
             - /32
 
   UpdateSecurityGroupPrimaryICMP:
@@ -307,7 +307,7 @@ Resources:
       ToPort: '5405'
       CidrIp: !Join 
         - ''
-        - - !Ref HANAPrimaryNewIPAddr
+        - - !Ref HANAPrimaryCorosync2ndIP
           - /32
   
   UpdateSecurityGroupSecondaryICMP:
@@ -440,8 +440,8 @@ Resources:
       domainName: !Ref DomainName
       TempS3Bucket: !Join [ '',[ 's3://',!Ref MyS3Bucket,'/',!Ref MyS3BucketPreFix,'/']]
       MyOS : !Ref MyOS
-      HANAPrimaryNewIPAddr: !Ref HANAPrimaryNewIPAddr
-      HANASecondaryNewIPAddr: !Ref HANASecondaryNewIPAddr
+      HANAPrimaryCorosync2ndIP: !Ref HANAPrimaryCorosync2ndIP
+      HANASecondaryCorosync2ndIP: !Ref HANASecondaryCorosync2ndIP
 
 Outputs:
   ResultsHAConfig:
