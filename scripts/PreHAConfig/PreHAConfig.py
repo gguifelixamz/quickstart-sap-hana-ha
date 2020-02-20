@@ -122,7 +122,12 @@ def lambda_handler(input, context):
 
                 retValue = updateNetworkConfig(HANASecondaryInstanceID,HANASecondaryIPAddress,HANASecondarySecondIP,AWSRegion)
                 manageRetValue(retValue,"updateNetworkConfigSecondary",input, context)
-
+            else:
+                responseStr['HANAPrimarySecondIP'] = 'NotSet'
+                responseStr['HANASecondarySecondIP'] = 'NotSet'
+                responseStr['updateNetworkConfigPrimary'] = 'NotSet'
+                responseStr['updateNetworkConfigSecondary'] = 'NotSet'
+                
             retValue = backupHANAonPrimary(HANAPrimaryInstanceID,hanaSID,hanaInstanceNo,HANAMasterPass,AWSRegion)
             manageRetValue(retValue,"backupHANAonPrimary",input, context)
 

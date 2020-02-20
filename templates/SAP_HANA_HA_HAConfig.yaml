@@ -189,6 +189,18 @@ Metadata:
       HANASecondaryCorosync2ndIP:
         default: Secondary HANA Instance Second IP Address for Corosync Redundant Ring
 
+Conditions:
+  HANAPrimarySecondIPPresent: 
+    Fn::Not: 
+      - Fn::Equals: 
+        - Ref: HANAPrimaryCorosync2ndIP 
+        - 'NotSet'
+  HanaSecondarySecondIPPresent:
+    Fn::Not:
+      - Fn::Equals:
+        - Ref: HANASecondaryCorosync2ndIP
+        - 'NotSet'
+
 Resources:
   UpdateInstanceIAMRoles:
     Type: 'AWS::IAM::Policy'
@@ -237,6 +249,7 @@ Resources:
 
   UpdateSecurityGroupPrimaryUDPSecondIp:
       Type: 'AWS::EC2::SecurityGroupIngress'
+      Condition: HANAPrimarySecondIPPresent
       Properties:
         GroupId: !Ref HANAPrimarySecurityGroup
         Description: HA Cluster health check UDP port from Secondary HANA
@@ -299,6 +312,7 @@ Resources:
 
   UpdateSecurityGroupSecondaryUDPSecondIp:
     Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: HanaSecondarySecondIPPresent
     Properties:
       GroupId: !Ref HANASecondarySecurityGroup
       Description: HA Cluster health check UDP port from Primary HANA
