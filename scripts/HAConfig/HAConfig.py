@@ -135,7 +135,7 @@ def installRsyslog(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion):
     CommandArray = []
     # SLES12 SP4 & SLES 15 do not have aws-vpc-move-ip installed by default
     CommandArray.append('zypper install -y aws-vpc-move-ip')
-    CommandArray.append('zypper install -y -l rsyslog -syslogd')
+    CommandArray.append('zypper install -y rsyslog')
     CommentStr = 'Install rsyslog'
     InstanceIDArray =[HANAPrimaryInstanceID,HANASecondaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)

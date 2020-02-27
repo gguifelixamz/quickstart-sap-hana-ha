@@ -91,6 +91,18 @@ def setSecondaryInterfaceIP(EC2InstanceENIId):
     assignedIPv4 = jmespath.search("AssignedPrivateIpAddresses[].PrivateIpAddress", response)
     assignedIPv4_str = ''.join(assignedIPv4)
     return assignedIPv4_str
+    
+def updateClusterPackages(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion):
+    CommandArray = []
+    CommandArray.append('zypper update -y SAPHanaSR pacemaker* resource-agents cluster-glue aws-vpc-move-ip corosync crmsh hawk2')
+    CommentStr = 'Update cluster packages on Primary'
+    InstanceIDArray =[HANAPrimaryInstanceID]
+    if ( executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion) == 1 ):
+        CommentStr = 'Update cluster packages on Secondary'
+        InstanceIDArray =[HANASecondaryInstanceID]
+        return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
+    else:
+        return 0
 
 def lambda_handler(input, context):
     global responseStr
@@ -107,6 +119,10 @@ def lambda_handler(input, context):
             MyOS = input['ResourceProperties']['MyOS']
 
             if 'SUSE' in MyOS.upper():
+                # Update cluster packages
+                retValue = updateClusterPackages(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
+                manageRetValue(retValue,"updateClusterPackages",input, context)
+                
                 # Retrieve ENI IDs from both HANA instances
                 HANAPrimaryENIID = getNetworkInterfaceId(HANAPrimaryInstanceID)
                 HANASecondaryENIID = getNetworkInterfaceId(HANASecondaryInstanceID)
@@ -130,8 +146,7 @@ def lambda_handler(input, context):
                 
             retValue = backupHANAonPrimary(HANAPrimaryInstanceID,hanaSID,hanaInstanceNo,HANAMasterPass,AWSRegion)
             manageRetValue(retValue,"backupHANAonPrimary",input, context)
-
-#            cfnresponse.send(input, context, cfnresponse.SUCCESS, {'Status':json.dumps(responseStr)})
+            
             cfnresponse.send(input, context, cfnresponse.SUCCESS, responseStr)
         else:
             responseStr['Status'] = 'Nothing to do as Request Type is : ' + input['RequestType']
