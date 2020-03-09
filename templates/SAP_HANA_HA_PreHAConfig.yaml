@@ -146,6 +146,8 @@ Resources:
                    Effect: Allow
                  - Action:
                      - 'ssm:ListCommands'
+                     - 'ec2:AssignPrivateIpAddresses'
+                     - 'ec2:DescribeInstances'
                    Resource: "*"
                    Effect: Allow
 
@@ -186,8 +188,28 @@ Resources:
       MyOS : !Ref MyOS
 
 Outputs:
-  ResultsPreHAConfig:
+  UpdateNetworkConfigPrimary:
     Description: Pre HANA HA Config Results
     Value: !GetAtt 
       - InvokePreHAConfigLambdaFunction
-      - Status
+      - updateNetworkConfigPrimary
+  UpdateNetworkConfigSecondary:
+    Description: Pre HANA HA Config Results
+    Value: !GetAtt 
+      - InvokePreHAConfigLambdaFunction
+      - updateNetworkConfigSecondary  
+  BackupHanaOnPrimary:
+    Description: Pre HANA HA Config Results
+    Value: !GetAtt 
+      - InvokePreHAConfigLambdaFunction
+      - backupHANAonPrimary  
+  HANAPrimaryCorosync2ndIP:
+    Description: Pre HANA HA Config Results
+    Value: !GetAtt
+      - InvokePreHAConfigLambdaFunction
+      - HANAPrimarySecondIP
+  HANASecondaryCorosync2ndIP:
+    Description: Pre HANA HA Config Results
+    Value: !GetAtt
+      - InvokePreHAConfigLambdaFunction
+      - HANASecondarySecondIP

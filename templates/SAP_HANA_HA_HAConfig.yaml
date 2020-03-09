@@ -89,6 +89,12 @@ Parameters:
   MyOS:
      Description : Operating System for HANA instances
      Type: String
+  HANAPrimaryCorosync2ndIP:
+     Description: Primary HANA Instance Second IP Address for Corosync Redundant Ring
+     Type: String
+  HANASecondaryCorosync2ndIP:
+     Description: Secondary HANA Instance Second IP Address for Corosync Redundant Ring
+     Type: String
      
 Metadata:
   'AWS::CloudFormation::Interface':
@@ -109,6 +115,8 @@ Metadata:
           - PublicSubnet1CIDR
           - VPCID
           - MyOS
+          - HANAPrimaryCorosync2ndIP
+          - HANASecondaryCorosync2ndIP
       - Label:
           default: HANA Instance Details
         Description:
@@ -176,6 +184,22 @@ Metadata:
         default: Pacemaker Tag Name
       MyOS:
         default: Operating system for HANA instances
+      HANAPrimaryCorosync2ndIP:
+        default: Primary HANA Instance Second IP Address for Corosync Redundant Ring
+      HANASecondaryCorosync2ndIP:
+        default: Secondary HANA Instance Second IP Address for Corosync Redundant Ring
+
+Conditions:
+  HANAPrimarySecondIPPresent: 
+    Fn::Not: 
+      - Fn::Equals: 
+        - Ref: HANAPrimaryCorosync2ndIP 
+        - 'NotSet'
+  HanaSecondarySecondIPPresent:
+    Fn::Not:
+      - Fn::Equals:
+        - Ref: HANASecondaryCorosync2ndIP
+        - 'NotSet'
 
 Resources:
   UpdateInstanceIAMRoles:
@@ -223,6 +247,20 @@ Resources:
         - - !Ref HANASecondaryIPAddress
           - /32
 
+  UpdateSecurityGroupPrimaryUDPSecondIp:
+      Type: 'AWS::EC2::SecurityGroupIngress'
+      Condition: HANAPrimarySecondIPPresent
+      Properties:
+        GroupId: !Ref HANAPrimarySecurityGroup
+        Description: HA Cluster health check UDP port from Secondary HANA
+        IpProtocol: udp
+        FromPort: '5405'
+        ToPort: '5405'
+        CidrIp: !Join 
+          - ''
+          - - !Ref HANASecondaryCorosync2ndIP
+            - /32
+
   UpdateSecurityGroupPrimaryICMP:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
@@ -245,7 +283,6 @@ Resources:
       FromPort: '7630'
       ToPort: '7630'
       CidrIp: !Ref PublicSubnet1CIDR
-
 
   UpdateSecurityGroupPrimaryTCP:
     Type: 'AWS::EC2::SecurityGroupIngress'
@@ -273,6 +310,20 @@ Resources:
         - - !Ref HANAPrimaryIPAddress
           - /32
 
+  UpdateSecurityGroupSecondaryUDPSecondIp:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: HanaSecondarySecondIPPresent
+    Properties:
+      GroupId: !Ref HANASecondarySecurityGroup
+      Description: HA Cluster health check UDP port from Primary HANA
+      IpProtocol: udp
+      FromPort: '5405'
+      ToPort: '5405'
+      CidrIp: !Join 
+        - ''
+        - - !Ref HANAPrimaryCorosync2ndIP
+          - /32
+  
   UpdateSecurityGroupSecondaryICMP:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
@@ -403,6 +454,8 @@ Resources:
       domainName: !Ref DomainName
       TempS3Bucket: !Join [ '',[ 's3://',!Ref MyS3Bucket,'/',!Ref MyS3BucketPreFix,'/']]
       MyOS : !Ref MyOS
+      HANAPrimaryCorosync2ndIP: !Ref HANAPrimaryCorosync2ndIP
+      HANASecondaryCorosync2ndIP: !Ref HANASecondaryCorosync2ndIP
 
 Outputs:
   ResultsHAConfig:
