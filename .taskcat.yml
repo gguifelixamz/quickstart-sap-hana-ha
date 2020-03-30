@@ -1,0 +1,63 @@
+project:
+  name: quickstart-sap-hana-ha
+  owner: quickstart-eng@amazon.com
+  package_lambda: false
+  regions:
+  - ap-northeast-1
+  - ap-northeast-2
+  - ap-south-1
+  - ap-southeast-1
+  - ap-southeast-2
+  - ca-central-1
+  - eu-central-1
+  - eu-west-1
+  - sa-east-1
+  - us-east-1
+  - us-east-2
+  - us-west-1
+  - us-west-2
+  s3_bucket: ''
+tests:
+  sap-hana-sles12sp4-single:
+    parameters:
+      AvailabilityZones: $[alfred_getaz_2]
+      VPCCIDR: 10.0.0.0/0
+      PublicSubnet1CIDR: 10.90.3.0/24
+      PublicSubnet2CIDR: 10.90.4.0/24
+      PrivateSubnet1CIDR: 10.90.1.0/24
+      PrivateSubnet2CIDR: 10.90.2.0/24
+      RemoteAccessCIDR: 0.0.0.0/0
+      ApplicationCIDR: 0.0.0.0/0
+      DomainName: testdomain.net
+      HANAHostnamePrimary: prihana
+      HANAHostnameSecondary: sechana
+      PrivateBucket: aws-quickstart/quickstart-sap-hana
+      CustomStorageConfig: aws-quickstart/quickstart-sap-hana/scripts
+      Proxy: ""
+      KeyName: $[alfred_getkeypair]
+      HANAInstallMedia: s3://quickstart-ci-media/sap/hana/sps23/
+      EnableLogging: "No"
+      CloudTrailS3Bucket: ""
+      Encryption: "No"
+      VolumeTypeHanaData: gp2
+      VolumeTypeHanaLog: gp2
+      MyOS: SuSELinux12SP2ForSAP
+      SLESBYOSRegCode: ""
+      InstallRDPInstance: "No"
+      InstallHANA: "Yes"
+      RDPInstanceType: c4.large
+      MyInstanceType: r4.2xlarge
+      SID: HDB
+      SAPInstanceNum: "00"
+      HANAMasterPass: $[alfred_genpass_16]
+      SAPTZ: UC
+      PrimaryHANASite: HAP
+      SecondaryHANASite: HAS
+      VirtualIPAddress: "192.168.1.99"
+      PaceMakerTag: PaceTagA
+      DedicatedHostId: ""
+      QSS3BucketName: $[taskcat_autobucket]
+      QSS3BucketRegion: $[taskcat_current_region]
+    regions:
+    - us-east-1
+    template: templates/SAP_HANA_HA_Master_New_VPC.yaml
