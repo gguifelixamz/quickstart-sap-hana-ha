@@ -80,6 +80,10 @@ Parameters:
     Default: aws-quickstart
     Description: S3 bucket name for the Quick Start HANA-HA assets.
     Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
+    Type: String
   QSS3KeyPrefix:
     AllowedPattern: "^[0-9a-zA-Z-/]*[^/]$"
     ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/) but should not end with forward slash (/).
@@ -313,6 +317,7 @@ Metadata:
           - PrivateBucket
           - CustomStorageConfig
           - QSS3BucketName
+          - QSS3BucketRegion
           - QSS3KeyPrefix
     ParameterLabels:
       VPCCIDR:
@@ -343,6 +348,8 @@ Metadata:
         default: Enter Amazon S3 URL for SAP HANA software
       QSS3BucketName:
         default: S3 Bucket containg SAP HANA-HA assets
+      QSS3BucketRegion:
+        default: Quick Start S3 bucket region
       QSS3KeyPrefix:
         default: Prefix for SAP HANA-HA assets Bucket
       CloudTrailS3Bucket:
@@ -397,13 +404,18 @@ Metadata:
 Conditions:
   InstallHANAorNot: !Equals [ !Ref InstallHANA, 'Yes' ]
   IfDedicatedHost: !Not [!Equals [!Select [0, !Ref DedicatedHostId], '']]
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
 
 Resources:
 
   CreateVPC:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_CreateVPC.yaml
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/templates/SAP_HANA_HA_CreateVPC.yaml
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         AvailabilityZones:
           Fn::Join:
@@ -420,10 +432,15 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     DependsOn: CreateVPC
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreTasks.yaml
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreTasks.yaml
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         MyS3Bucket: ''
         QSS3BucketName: !Sub ${QSS3BucketName}
+        QSS3BucketRegion: !Sub ${QSS3BucketRegion}
         QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}/scripts
       TimeoutInMinutes: '7200'
 
@@ -431,7 +448,11 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     DependsOn: PreTasks
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_ValidateParameters.yaml
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/templates/SAP_HANA_HA_ValidateParameters.yaml
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         LambdaBucket: !GetAtt
                             - PreTasks
@@ -455,7 +476,11 @@ Resources:
       - ValidateParameters
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/submodules/quickstart-sap-hana/templates/SAP-HANA-BaseNodes.template
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/submodules/quickstart-sap-hana/templates/SAP-HANA-BaseNodes.template
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         PrivSubCIDR: !Ref PrivateSubnet1CIDR
         DMZCIDR: !Ref PublicSubnet1CIDR
@@ -504,7 +529,11 @@ Resources:
       - ValidateParameters
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/submodules/quickstart-sap-hana/templates/SAP-HANA-BaseNodes.template
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/submodules/quickstart-sap-hana/templates/SAP-HANA-BaseNodes.template
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         PrivSubCIDR: !Ref PrivateSubnet2CIDR
         DMZCIDR: !Ref PublicSubnet1CIDR
@@ -555,7 +584,11 @@ Resources:
     Condition: InstallHANAorNot
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreHAConfig.yaml
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/templates/SAP_HANA_HA_PreHAConfig.yaml
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
           HANAPrimaryInstanceId: !GetAtt
                         - PrimaryInstance
@@ -597,7 +630,11 @@ Resources:
     Condition: InstallHANAorNot
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-        TemplateURL: !Sub https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/SAP_HANA_HA_HAConfig.yaml
+      TemplateURL:
+        !Sub
+          - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/templates/SAP_HANA_HA_HAConfig.yaml
+          - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+            S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
         Parameters:
           HANAPrimaryInstanceId: !GetAtt
                         - PrimaryInstance

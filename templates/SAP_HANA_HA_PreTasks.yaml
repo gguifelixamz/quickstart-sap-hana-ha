@@ -11,6 +11,7 @@ Metadata:
         default: AWS Quick Start Configuration
       Parameters:
       - QSS3BucketName
+      - QSS3BucketRegion
       - QSS3KeyPrefix
 
     ParameterLabels:
@@ -32,6 +33,10 @@ Parameters:
     Default: hanaqs
     Description: S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-).
     Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: 'The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is hosted. When using your own bucket, you must specify this value.'
+    Type: String
   QSS3KeyPrefix:
     AllowedPattern: "^[0-9a-zA-Z-/]*$"
     ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
@@ -45,6 +50,7 @@ Conditions:
     - Fn::Equals:
       - Ref: MyS3Bucket
       - ''
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
 
 Resources:
   CreateNewMyS3Bucket:
@@ -69,7 +75,7 @@ Resources:
       DestBucket:
         Ref: CreateNewMyS3Bucket
       SourceBucket:
-        Ref: QSS3BucketName
+        !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Prefix: 
         Ref: QSS3KeyPrefix
       Objects:
@@ -99,8 +105,9 @@ Resources:
           - Effect: Allow
             Action:
             - s3:GetObject
-            Resource:
-            - Fn::Sub: arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}/*
+            Resource: !Sub
+            - arn:${AWS::Partition}:s3:::${S3Bucket}/${QSS3KeyPrefix}*
+            - S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
           - Effect: Allow
             Action:
             - s3:PutObject
