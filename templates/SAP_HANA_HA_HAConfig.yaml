@@ -122,8 +122,8 @@ Metadata:
         Description:
           default: ''
         Parameters:
-          - PrimarySiteName
-          - SecondarySiteName
+          - PrimaryHANASite
+          - SecondaryHANASite
           - SAPInstanceNum
           - DomainName
           - SID
