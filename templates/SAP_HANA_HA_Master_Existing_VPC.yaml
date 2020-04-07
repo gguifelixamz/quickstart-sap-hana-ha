@@ -593,57 +593,57 @@ Resources:
           - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}/templates/SAP_HANA_HA_HAConfig.yaml'
           - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
             S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-        Parameters:
-          HANAPrimaryInstanceId: !GetAtt
-                        - PrimaryInstance
-                        - Outputs.HANAMasterInstanceId
-          HANASecondaryInstanceId: !GetAtt
-                        - SecondaryInstance
-                        - Outputs.HANAMasterInstanceId
-          HANAHostnamePrimary: !Ref HANAHostnamePrimary
-          HANAHostnameSecondary: !Ref HANAHostnameSecondary
-          PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
-          PaceMakerTag: !Ref PaceMakerTag
-          VirtualIPAddress: !Ref VirtualIPAddress
-          PrimaryHANASite: !Ref PrimaryHANASite
-          SecondaryHANASite: !Ref SecondaryHANASite
-          PrimarySubnetId: !Ref PrivateSubnet1ID
-          SecondarySubnetId: !Ref PrivateSubnet2ID
-          SID: !Ref SID
-          VPCID: !Ref VPCID
-          HANAMasterPass: !Ref HANAMasterPass
-          SAPInstanceNum: !Ref SAPInstanceNum
-          HANAPrimaryIPAddress: !GetAtt
-                            - PrimaryInstance
-                            - Outputs.HANAMasterInstanceIP
-          HANASecondaryIPAddress: !GetAtt
-                            - SecondaryInstance
-                            - Outputs.HANAMasterInstanceIP
-          DomainName: !Ref DomainName
-          MyS3Bucket: !GetAtt
-                            - PreTasks
-                            - Outputs.MyS3Bucket
-          MyS3BucketPreFix: !Sub ${QSS3KeyPrefix}/scripts
-          HANAPrimaryInstanceRole: !GetAtt
-                            - PrimaryInstance
-                            - Outputs.HANAMasterInstanceRole
-          HANASecondaryInstanceRole: !GetAtt
-                            - SecondaryInstance
-                            - Outputs.HANAMasterInstanceRole
-          HANAPrimarySecurityGroup: !GetAtt
-                            - PrimaryInstance
-                            - Outputs.HANAMasterSecurityGroup
-          HANASecondarySecurityGroup: !GetAtt
-                            - SecondaryInstance
-                            - Outputs.HANAMasterSecurityGroup
-          MyOS: !Ref MyOS
-          HANAPrimaryCorosync2ndIP: !GetAtt
-                            - PreHAConfig
-                            - Outputs.HANAPrimaryCorosync2ndIP
-          HANASecondaryCorosync2ndIP: !GetAtt
-                            - PreHAConfig
-                            - Outputs.HANASecondaryCorosync2ndIP
-        TimeoutInMinutes: '7200'
+      Parameters:
+        HANAPrimaryInstanceId: !GetAtt
+                      - PrimaryInstance
+                      - Outputs.HANAMasterInstanceId
+        HANASecondaryInstanceId: !GetAtt
+                      - SecondaryInstance
+                      - Outputs.HANAMasterInstanceId
+        HANAHostnamePrimary: !Ref HANAHostnamePrimary
+        HANAHostnameSecondary: !Ref HANAHostnameSecondary
+        PublicSubnet1CIDR: !Ref PublicSubnet1CIDR
+        PaceMakerTag: !Ref PaceMakerTag
+        VirtualIPAddress: !Ref VirtualIPAddress
+        PrimaryHANASite: !Ref PrimaryHANASite
+        SecondaryHANASite: !Ref SecondaryHANASite
+        PrimarySubnetId: !Ref PrivateSubnet1ID
+        SecondarySubnetId: !Ref PrivateSubnet2ID
+        SID: !Ref SID
+        VPCID: !Ref VPCID
+        HANAMasterPass: !Ref HANAMasterPass
+        SAPInstanceNum: !Ref SAPInstanceNum
+        HANAPrimaryIPAddress: !GetAtt
+                          - PrimaryInstance
+                          - Outputs.HANAMasterInstanceIP
+        HANASecondaryIPAddress: !GetAtt
+                          - SecondaryInstance
+                          - Outputs.HANAMasterInstanceIP
+        DomainName: !Ref DomainName
+        MyS3Bucket: !GetAtt
+                          - PreTasks
+                          - Outputs.MyS3Bucket
+        MyS3BucketPreFix: !Sub ${QSS3KeyPrefix}/scripts
+        HANAPrimaryInstanceRole: !GetAtt
+                          - PrimaryInstance
+                          - Outputs.HANAMasterInstanceRole
+        HANASecondaryInstanceRole: !GetAtt
+                          - SecondaryInstance
+                          - Outputs.HANAMasterInstanceRole
+        HANAPrimarySecurityGroup: !GetAtt
+                          - PrimaryInstance
+                          - Outputs.HANAMasterSecurityGroup
+        HANASecondarySecurityGroup: !GetAtt
+                          - SecondaryInstance
+                          - Outputs.HANAMasterSecurityGroup
+        MyOS: !Ref MyOS
+        HANAPrimaryCorosync2ndIP: !GetAtt
+                          - PreHAConfig
+                          - Outputs.HANAPrimaryCorosync2ndIP
+        HANASecondaryCorosync2ndIP: !GetAtt
+                          - PreHAConfig
+                          - Outputs.HANASecondaryCorosync2ndIP
+      TimeoutInMinutes: '7200'
 
 Outputs:
   PrimaryIP:
