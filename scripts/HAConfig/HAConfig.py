@@ -73,7 +73,6 @@ def executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion):
     else:
         return 0
 
-
 def setupAWSConfigProfile(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion):
     CommandArray = []
     CommandArray.append('mkdir /root/.aws')
@@ -86,7 +85,6 @@ def setupAWSConfigProfile(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegio
     CommentStr = 'AWS cofig file on Primary & Secondary'
     InstanceIDArray =[HANAPrimaryInstanceID,HANASecondaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
-
 
 def disableSourceDestinationCheck(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion):
     session = boto3.Session()
@@ -107,7 +105,6 @@ def verifySourceDestinationCheck(HANAPrimaryInstanceID,HANASecondaryInstanceID,A
             return 0
     else:
         return 0
-
 
 def createPacemakerTag(HANAPrimaryInstanceID,HANASecondaryInstanceID,PaceMakerTag,HANAPrimaryHostname,HANASecondaryHostname,hanaSID,AWSRegion):
     session = boto3.Session()
@@ -140,7 +137,6 @@ def installRsyslog(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion):
     InstanceIDArray =[HANAPrimaryInstanceID,HANASecondaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
 
-
 def copySSFSFilesFromPrimaryToS3(HANAPrimaryInstanceID,TempS3Bucket,hanaSID,AWSRegion):
     CommandArray = []
     CommandArray.append('aws s3 cp /usr/sap/'+hanaSID+'/SYS/global/security/rsecssfs/data/SSFS_'+hanaSID+'.DAT '+TempS3Bucket)
@@ -148,7 +144,6 @@ def copySSFSFilesFromPrimaryToS3(HANAPrimaryInstanceID,TempS3Bucket,hanaSID,AWSR
     CommentStr = 'Copy SSFS from Primary to TempBucket'
     InstanceIDArray =[HANAPrimaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
-
 
 def copySSFSFilesFromS3ToSecondary(HANASecondaryInstanceID,TempS3Bucket,hanaSID,AWSRegion):
     CommandArray = []
@@ -162,7 +157,6 @@ def copySSFSFilesFromS3ToSecondary(HANASecondaryInstanceID,TempS3Bucket,hanaSID,
     CommentStr = 'Copy SSFS from TempBucket to Secondary'
     InstanceIDArray =[HANASecondaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
-
 
 def disableHANAAutoStartSecondary(HANASecondaryInstanceID,HANASecondaryHostname,hanaSID,hanaInstanceNo,AWSRegion):
     CommandArray = []
@@ -199,7 +193,6 @@ def updatePreserveHostName(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegi
     InstanceIDArray =[HANAPrimaryInstanceID,HANASecondaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
 
-
 def updateDefaultTasksMax(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion):
     #https://www.novell.com/support/kb/doc.php?id=7018594
     CommandArray = []
@@ -209,7 +202,6 @@ def updateDefaultTasksMax(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegio
     CommentStr = 'Update DefaultTasksMax on Primary & Secondary'
     InstanceIDArray =[HANAPrimaryInstanceID,HANASecondaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
-
 
 def CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,hanaInstanceNo,PaceMakerTag,AWSRegion):
     CommandArray = []
@@ -275,7 +267,6 @@ def CompleteCoroSyncSetup(HANAPrimaryInstanceID,RTabId,HANAVirtualIP,hanaSID,han
     InstanceIDArray =[HANAPrimaryInstanceID]
     return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
 
-
 def StartPaceMaker(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAMasterPass,AWSRegion):
     CommandArray=[]
     CommandArray.append('systemctl start pacemaker')
@@ -291,7 +282,6 @@ def StartPaceMaker(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAMasterPass,
         return executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion)
     else:
         return 0
-
 
 def createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecondaryIPAddress,HANAPrimaryIPAddress,HANAPrimaryCorosync2ndIP,HANASecondaryCorosync2ndIP,AWSRegion):
     CommandArray = []
@@ -400,7 +390,7 @@ def manageRetValue(retValue,FuncName,input, context):
         cfnresponse.send(input, context, cfnresponse.FAILED, {'Status':json.dumps(responseStr)})
         sys.exit(0)
 
-def setupSUSESAPHanaHook(HANAPrimaryInstanceID,HANASecondaryInstanceID,hanaSID,AWSRegion):
+def setupSUSESAPHanaHook(HANAPrimaryInstanceID,HANASecondaryInstanceID,hanaSID,sidadm,AWSRegion):
     CommandArray = []
     CommandArray.append('echo " " >> /hana/shared/'+hanaSID.upper()+'/global/hdb/custom/config/global.ini')
     CommandArray.append('echo "[ha_dr_provider_SAPHanaSR]" >> /hana/shared/'+hanaSID.upper()+'/global/hdb/custom/config/global.ini')
@@ -410,6 +400,7 @@ def setupSUSESAPHanaHook(HANAPrimaryInstanceID,HANASecondaryInstanceID,hanaSID,A
     CommandArray.append('echo " " >> /hana/shared/'+hanaSID.upper()+'/global/hdb/custom/config/global.ini')
     CommandArray.append('echo "[trace]" >> /hana/shared/'+hanaSID.upper()+'/global/hdb/custom/config/global.ini')
     CommandArray.append('echo "ha_dr_saphanasr = info" >> /hana/shared/'+hanaSID.upper()+'/global/hdb/custom/config/global.ini')
+    CommandArray.append('echo "'+sidadm+' ALL=(ALL) NOPASSWD: /usr/sbin/crm_attribute -n hana_'+hanaSID.lower()+'_site_srHook_*" >> /etc/sudoers')
     CommentStr = 'Enable SAP HANA Hook'
     InstanceIDArray =[HANAPrimaryInstanceID]
     if ( executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion) == 1 ):
@@ -479,6 +470,7 @@ def lambda_handler(input, context):
             MyOS = MyOS.upper()
             HANAPrimaryCorosync2ndIP = input['ResourceProperties']['HANAPrimaryCorosync2ndIP']
             HANASecondaryCorosync2ndIP = input['ResourceProperties']['HANASecondaryCorosync2ndIP']
+            sidadm = hanaSID.lower()+"adm"
 
             retValue = setupAWSConfigProfile(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion)
             manageRetValue(retValue,"setupAWSConfigProfile",input, context)
@@ -538,7 +530,7 @@ def lambda_handler(input, context):
                 retValue = createCoroSyncConfig(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANASecondaryIPAddress,HANAPrimaryIPAddress,HANAPrimaryCorosync2ndIP,HANASecondaryCorosync2ndIP,AWSRegion)
                 manageRetValue(retValue,"createCoroSyncConfig",input, context)
                 
-                retValue = setupSUSESAPHanaHook(HANAPrimaryInstanceID,HANASecondaryInstanceID,hanaSID,AWSRegion)
+                retValue = setupSUSESAPHanaHook(HANAPrimaryInstanceID,HANASecondaryInstanceID,hanaSID,sidadm,AWSRegion)
                 manageRetValue(retValue,"setupSUSESAPHanaHook",input, context)
 
                 retValue = StartPaceMaker(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAMasterPass,AWSRegion)
