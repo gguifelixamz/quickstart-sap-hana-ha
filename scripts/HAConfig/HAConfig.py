@@ -434,8 +434,8 @@ def RHELSetupHANACluster(HANAPrimaryInstanceID,HANASecondaryInstanceID,HANAPrima
     #Removed resource-stickiness & migration-threshold based on recommendations from Red Hat
     #CommandArray.append('pcs resource defaults resource-stickiness=1000')
     #CommandArray.append('pcs resource defaults migration-threshold=5000')
-    CommandArray.append('pcs resource create SAPHanaTopology_'+hanaSID+'_'+hanaInstanceNo+' SAPHanaTopology SID='+hanaSID+' InstanceNumber='+hanaInstanceNo+' --clone clone-max=2 clone-node-max=1 interleave=true')
-    CommandArray.append('pcs resource create SAPHana_'+hanaSID+'_'+hanaInstanceNo+' SAPHana SID='+hanaSID+' InstanceNumber='+hanaInstanceNo+' PREFER_SITE_TAKEOVER=true DUPLICATE_PRIMARY_TIMEOUT=7200 AUTOMATED_REGISTER=true master meta notify=true clone-max=2 clone-node-max=1 interleave=true')
+    CommandArray.append('pcs resource create SAPHanaTopology_'+hanaSID+'_'+hanaInstanceNo+' SAPHanaTopology SID='+hanaSID+' InstanceNumber='+hanaInstanceNo+' op start timeout=600 op stop timeout=300 op monitor interval=10 timeout=600 --clone clone-max=2 clone-node-max=1 interleave=true')
+    CommandArray.append('pcs resource create SAPHana_'+hanaSID+'_'+hanaInstanceNo+' SAPHana SID='+hanaSID+' InstanceNumber='+hanaInstanceNo+' PREFER_SITE_TAKEOVER=true DUPLICATE_PRIMARY_TIMEOUT=7200 AUTOMATED_REGISTER=true op start timeout=3600 op stop timeout=3600 op monitor interval=61 role="Slave" timeout=700 op monitor interval=59 role="Master" timeout=700 op promote timeout=3600 op demote timeout=3600 master meta notify=true clone-max=2 clone-node-max=1 interleave=true')
     CommandArray.append('pcs resource create SAPHana_'+hanaSID+'_OIP aws-vpc-move-ip ip='+HANAVirtualIP+' interface=eth0 routing_table='+RTabId)
     CommandArray.append('pcs constraint order SAPHanaTopology_'+hanaSID+'_'+hanaInstanceNo+'-clone then SAPHana_'+hanaSID+'_'+hanaInstanceNo+'-master symmetrical=false')
     CommandArray.append('pcs constraint colocation add SAPHana_'+hanaSID+'_OIP with master SAPHana_'+hanaSID+'_'+hanaInstanceNo+'-master 2000')
