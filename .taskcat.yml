@@ -35,7 +35,7 @@ tests:
       CustomStorageConfig: aws-quickstart/quickstart-sap-hana/scripts
       Proxy: ""
       KeyName: $[alfred_getkeypair]
-      HANAInstallMedia: s3://quickstart-ci-media/sap/hana/sps23/
+      HANAInstallMedia: override
       EnableLogging: "No"
       CloudTrailS3Bucket: ""
       Encryption: "No"
