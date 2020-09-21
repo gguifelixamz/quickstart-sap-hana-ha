@@ -1,3 +1,4 @@
 [submodule "submodules/quickstart-sap-hana"]
 	path = submodules/quickstart-sap-hana
 	url = ../../aws-quickstart/quickstart-sap-hana.git
+	branch = main
