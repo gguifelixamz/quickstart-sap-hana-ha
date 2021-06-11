@@ -94,7 +94,7 @@ def setSecondaryInterfaceIP(EC2InstanceENIId):
     
 def updateClusterPackages(HANAPrimaryInstanceID,HANASecondaryInstanceID,AWSRegion):
     CommandArray = []
-    CommandArray.append('zypper update -y SAPHanaSR pacemaker* resource-agents cluster-glue aws-vpc-move-ip corosync crmsh hawk2')
+    CommandArray.append('zypper update -y SAPHanaSR pacemaker pacemaker-cli libpacemaker3 resource-agents cluster-glue aws-vpc-move-ip corosync crmsh hawk2')
     CommentStr = 'Update cluster packages on Primary'
     InstanceIDArray =[HANAPrimaryInstanceID]
     if ( executeSSMCommands(CommandArray,InstanceIDArray,CommentStr,AWSRegion) == 1 ):

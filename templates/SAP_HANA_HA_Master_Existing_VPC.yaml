@@ -127,17 +127,23 @@ Parameters:
   MyOS:
     Type: String
     Description: Operating system (SLES for SAP) and version for master nodes.
-    Default: SuSELinux12SP4ForSAP
+    Default: SuSELinux12SP5ForSAP
     AllowedValues:
       - SuSELinux12SP2ForSAP
       - SuSELinux12SP3ForSAP
       - SuSELinux12SP4ForSAP
+      - SuSELinux12SP5ForSAP
       - SuSELinux15ForSAP
+      - SuSELinux15SP1ForSAP
+      - SuSELinux15SP2ForSAP
       - SuSELinux12SP1ForSAP-BYOS
       - SuSELinux12SP2ForSAP-BYOS
       - SuSELinux12SP3ForSAP-BYOS
       - SuSELinux12SP4ForSAP-BYOS
+      - SuSELinux12SP5ForSAP-BYOS
       - SuSELinux15ForSAP-BYOS
+      - SuSELinux15SP1ForSAP-BYOS
+      - SuSELinux15SP2ForSAP-BYOS
       - RedHatLinux74ForSAP-With-HA-US
       - RedHatLinux75ForSAP-With-HA-US
       - RedHatLinux76ForSAP-With-HA-US
@@ -188,15 +194,27 @@ Parameters:
       - r5.4xlarge
       - r5.12xlarge
       - r5.24xlarge
+      - r5.metal
+      - r5b.2xlarge
+      - r5b.4xlarge
+      - r5b.8xlarge
+      - r5b.12xlarge
+      - r5b.16xlarge
+      - r5b.24xlarge
+      - r5b.metal
       - x1.16xlarge
       - x1.32xlarge
       - x1e.xlarge
       - x1e.2xlarge
       - x1e.4xlarge
       - x1e.32xlarge
+      - u-6tb1.56xlarge
+      - u-6tb1.112xlarge
       - u-6tb1.metal
       - u-9tb1.metal
+      - u-9tb1.112xlarge
       - u-12tb1.metal
+      - u-12tb1.112xlarge
       - u-18tb1.metal
       - u-24tb1.metal
   SID:
